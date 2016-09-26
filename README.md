@@ -11,8 +11,9 @@ HQLite's primary feature is using reflection for mapping from Java classes to da
 ## Configuration
 HQLite needs a little Configuration-over-Figuration to make it work:
 
-####  * SQLite needs access to the Android Context.
+  * SQLite needs access to the Android Context.
     - The easiest way for that, is placing in the manifest the attribute name of the application tag, pointing to the `com.ignite.HQLite.utils.ApplicationContextProvider` class as below:
+    
     
     ```
     <application
@@ -25,7 +26,10 @@ HQLite needs a little Configuration-over-Figuration to make it work:
     ```
     - If you already use that attribute for your own class, you need to decide if `ApplicationContextProvider` extends your class or vice versa, and implement it.
     
-####  * Define some setting of the database file:
+    
+    
+    
+  * Define some setting of the database file:
   
     Navigate through the HQlite library folders and find the `com.ignite.HQLite.managers.DatabaseManager` class. In this class you need to set two propperties:
     - The database name.
@@ -35,7 +39,10 @@ HQLite needs a little Configuration-over-Figuration to make it work:
 	private static final int DATABASE_VERSION = 1;
   ```
 
-####  * Define some optional settings:
+
+
+
+  * Define some optional settings:
   
     Now HQLite can be used but lets stay in the `DatabaseManager` to set some more properties:
     
@@ -50,3 +57,7 @@ HQLite needs a little Configuration-over-Figuration to make it work:
 	private static final String DOMAIN_PACKAGE = "";
 	public static final boolean SQL_CONSOLE_ENABLED = true;
   ```
+
+
+
+## Usage
