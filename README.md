@@ -61,3 +61,164 @@ HQLite needs a little Configuration-over-Figuration to make it work:
 
 
 ## Usage
+
+### 1 Quick Start Guide
+Domain classes are core to any business application. They hold state about business processes and hopefully also implement behavior. They are linked together through relationships; one-to-one, one-to-many, or many-to-many.
+
+HQLite implements object relational mapping (ORM). Under the hood it uses [SQLite](https://www.sqlite.org/about.html) (a very popular and flexible [public domain library](https://www.sqlite.org/copyright.html)) and thanks to the dynamic reflection of Java, there is far less configuration involved in creating HQLite domain classes and operate with them.
+
+#### 1.1 Domain modelling
+When building Android applications you have to consider the problem domain you are trying to solve. For example if you were building an Amazon-style bookstore you would be thinking about books, authors, customers and publishers to name a few.
+These are modeled in HQLite classes, so a Book class may have a title, a release date, an ISBN number and so on. The next few sections show how to model the domain in HQLite.
+
+To create a domain class you need to extends `com.ignite.HQLite.PersistentEntity` and declare a static field `TABLE` with its `com.ignite.HQLite.managers.EntityManager` as follows:
+
+  ```
+	public class Book extends PersistentEntity {
+		public static final EntityManager<Book> TABLE = new EntityManager<Book>(){};
+	}
+  ```
+This class will map automatically to a table in the database called book (the same name as the class).
+
+Now that you have a domain class you can define its properties as Java types. For example:
+
+  ```
+	public class Book extends PersistentEntity {
+		public static final EntityManager<Book> TABLE = new EntityManager<Book>(){};
+		public String title;
+    		public long releaseDate;
+    		public String ISBN;
+	}
+  ```
+Each property is mapped to a column in the database, where the convention for column names is like Java. For example releaseDate maps onto a column releaseDate. The SQL types are auto-detected from the Java types, but only this types are handled:
+
+Java type | SQLite type
+--- | ---
+`String` | `TEXT`
+`long` | `LONG`
+`double` | `DOUBLE`
+`int` | `INTEGER`
+`boolean` | `BOOLEAN`
+`byte` | `BLOB`
+`Date` | `LONG`*
+
+* If you need to store a Date, is expected to be a `long` field, and transform it on getter/setter method
+
+#### 1.2 Association
+Relationships define how domain classes interact with each other. Unless specified explicitly at both ends, a relationship exists only in the direction it is defined.
+
+##### 1.2.1 Many-to-one and one-to-one
+A Many-to-one relationship is the simplest kind, and is defined with a property of the type of another domain class. Consider this example:
+
+**Example A**
+
+  ```
+	public class Face extends PersistentEntity {
+		public static final EntityManager<Face> TABLE = new EntityManager<Face>(){};
+		public Nose nose;
+	}
+	public class Nose extends PersistentEntity {
+		public static final EntityManager<Nose> TABLE = new EntityManager<Nose>(){};
+	}
+  ```
+In this case we have a unidirectional many-to-one relationship from Face to Nose. To make this relationship bidirectional define the other side as follows (and see the section on controlling the ends of the association just below):
+
+**Example B**
+
+  ```
+	public class Face extends PersistentEntity {
+		...
+		public Nose nose;
+	}
+	public class Nose extends PersistentEntity {
+		...
+		@BelongsTo(mappedBy = "nose")
+		public Face face;
+	}
+  ```
+In this case we use the `BelongsTo` annotation to say that Nose "belongs to" Face. While in the example A, a Nose "can be used by many" Faces because the foreign-key is placed in the table Face, but in the example B the foreign-key is placed in the table Nose.
+This also affect the fetch type. If we annotate a field with `BelongsTo`, HQLite will use lazy fetch type to retrieve an empry object with its id. While in the other cases will use eager fetch type.
+
+To make the relationship a true one-to-one, use the `HasOne` annotation on the owning side.
+
+  ```
+	public class Face extends PersistentEntity {
+		...
+		@HasOne(mappedBy = "face")
+		public Nose nose;
+	}
+	public class Nose extends PersistentEntity {
+		...
+		@BelongsTo(mappedBy = "nose")
+		public Face face;
+	}
+  ```
+
+The result of this is that we can create a Face, attach a Nose instance to it and when we save or delete the Face instance, HQLite will save or delete the Nose. In other words, saves and deletes will cascade from Face to the associated Nose:
+  ```
+  Face f = new Face();
+  f.nose = new Nose();
+  f.save();
+  ```
+
+Note that using this annotations puts the foreign-key on the inverse table to the example A, so in this case the foreign-key column is stored in the Nose table inside a column called idFace. Also, `HasOne` only works with bidirectional relationships.
+
+##### 1.2.2 One-to-many
+A one-to-many relationship is when one class, example Author, has many instances of another class, example Book. With HQLite you define such a relationship with the `HasMany` annotation instead of `HasOne`:
+
+
+  ```
+	public class Author extends PersistentEntity {
+		...
+		@HasMany(mappedBy = "author")
+		public List<Book> books;
+		public String name;
+	}
+	public class Book extends PersistentEntity {
+		...
+		@BelongsTo(mappedBy = "books")
+		public Author author;
+		public String title;
+	}
+  ```
+  
+Remember that like `HasOne` annotation, `HasMany` will cause cascade saves and deletes in collections, with its correspondant `BelongsTo` in the other side of the relation.
+
+If we have more than one property of the same type, attribute `mappedBy` will be used to specify which collection is mapped:
+
+**Example A**
+  ```
+	public class Airport extends PersistentEntity {
+		...
+		@HasMany(mappedBy = "departureAirport")
+		public List<Flight> flights;
+	}
+	public class Flight extends PersistentEntity {
+		...
+		@BelongsTo(mappedBy = "flights")
+		Airport departureAirport;
+		Airport destinationAirport;
+	}
+  ```
+
+**Example B**
+  ```
+	public class Airport extends PersistentEntity {
+		...
+		@HasMany(mappedBy = "departureAirport")
+		public List<Flight> outboundFlights;
+		@HasMany(mappedBy = "destinationAirport")
+		public List<Flight> inboundFlights;
+	}
+	public class Flight extends PersistentEntity {
+		...
+		@BelongsTo(mappedBy = "outboundFlights")
+		Airport departureAirport;
+		@BelongsTo(mappedBy = "inboundFlights")
+		Airport destinationAirport;
+	}
+  ```
+
+#### 1.2 Basic CRUD
+
+Try performing some basic CRUD (Create/Read/Update/Delete) operations.
