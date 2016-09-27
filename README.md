@@ -123,25 +123,9 @@ A Many-to-one relationship is the simplest kind, and is defined with a property 
 		public static final EntityManager<Nose> TABLE = new EntityManager<Nose>(){};
 	}
   ```
-In this case we have a unidirectional many-to-one relationship from `Face` to `Nose`. To make this relationship bidirectional define the other side as follows (and see the section on controlling the ends of the association just below):
+In this case we have a unidirectional many-to-one relationship from `Face` to `Nose`. To make this relationship bidirectional define the both sides as follows:
 
 **Example B**
-
-  ```
-	public class Face extends PersistentEntity {
-		...
-		public Nose nose;
-	}
-	public class Nose extends PersistentEntity {
-		...
-		@BelongsTo(mappedBy = "nose")
-		public Face face;
-	}
-  ```
-In this case we use the `BelongsTo` annotation to say that `Nose` "belongs to" `Face`. While in the example A, a `Nose` "can be used by many" Faces because the foreign-key is placed in the table `Face`, but in the example B the foreign-key is placed in the table Nose.
-This also affect the fetch type. If we annotate a field with `BelongsTo`, HQLite will use lazy fetch type to retrieve an empry object with its id. While in the other cases will use eager fetch type.
-
-To make the relationship a true one-to-one, use the `HasOne` annotation on the owning side.
 
   ```
 	public class Face extends PersistentEntity {
@@ -155,6 +139,9 @@ To make the relationship a true one-to-one, use the `HasOne` annotation on the o
 		public Face face;
 	}
   ```
+In this case we use the `BelongsTo` and `HasOne` annotations to say that `Nose` "belongs to" `Face`. While in the example A, a `Nose` "can be used by many" Faces because the foreign-key is placed in the table `Face`, in the example B the foreign-key is placed in the table Nose.
+
+This also affect the fetch type. If we annotate a field with `BelongsTo`, HQLite will use lazy fetch type to retrieve an empry object with its id. While in the other cases will use eager fetch type.
 
 The result of this is that we can create a `Face`, attach a Nose instance to it and when we save or delete the `Face` instance, HQLite will save or delete the `Nose`. In other words, saves and deletes will cascade from `Face` to the associated `Nose`:
   ```
@@ -168,6 +155,7 @@ Note that using this annotations puts the foreign-key on the inverse table to th
 ### 1.2.2 One-to-many
 A one-to-many relationship is when one class, example `Author`, has many instances of another class, example `Book`. With HQLite you define such a relationship with the `HasMany` annotation instead of `HasOne`:
 
+**Example C**
 
   ```
 	public class Author extends PersistentEntity {
@@ -188,7 +176,7 @@ Remember that like `HasOne` annotation, `HasMany` will cause cascade saves and d
 
 If we have more than one property of the same type, attribute `mappedBy` will be used to specify which collection is mapped:
 
-**Example A**
+**Example D**
   ```
 	public class Airport extends PersistentEntity {
 		...
@@ -203,7 +191,7 @@ If we have more than one property of the same type, attribute `mappedBy` will be
 	}
   ```
 
-**Example B**
+**Example E**
   ```
 	public class Airport extends PersistentEntity {
 		...
@@ -223,6 +211,8 @@ If we have more than one property of the same type, attribute `mappedBy` will be
 ### 1.2.3 Many-to-many
 HQLite doesn't supports many-to-many relationships, but here is an example of how to implement your own table for that. Suppose that you want the next model:
 
+**Example F**
+
   ```
 	public class Author extends PersistentEntity {
 		...
@@ -239,6 +229,7 @@ HQLite doesn't supports many-to-many relationships, but here is an example of ho
   ```
 To implement this relationship in HQLite, you need to create a new domain class, for example: `AuthorBook`. The resulting model will be the follow:
 
+**Example G**
 
   ```
 	public class Author extends PersistentEntity {
@@ -261,6 +252,16 @@ To implement this relationship in HQLite, you need to create a new domain class,
 		public Book book;
 	}
   ```
+  
+### 1.2.4 In conclusion
+HQLite supports/expects the following relationships:
+
+Relationship type | Example of use | Description | Cascade Behaviour
+--- | :---: | --- | --- | ---
+Many-to-one | A | `Face` use `Nose`. | NO
+One-to-one | B | `Face` has one `Nose`. | YES
+One-to-many | C | `Author` has many `Books` | YES
+Many-to-many | G | `Author` has many `Books` and `Book` has many `Authors` | YES
 
 ### 1.3 Inheritance
 HQLite supports inheritance so simple as extending another domain class
@@ -293,9 +294,11 @@ HQLite supports inheritance so simple as extending another domain class
 In the above example we have a parent `Content` class and then various child classes with more specific behaviour.
 
 **Considerations**
+
 HQLite implements inheritance using one table for each subclass. However, excessive use of inheritance and table-per-subclass can result in poor query performance due to the use of many queries for each row to fetch all fields in all subclasses. In general our advice is if you're going to use inheritance, don't abuse it and don't make your inheritance hierarchy too deep.
 
 **Polymorphic Queries**
+
 The upshot of inheritance is that you get the ability to polymorphically query. For example using the getAll() method on the `Content` super class will return all subclasses of `Content`:
 ```
 List<Content> contents = Content.TABLE.getAll(); // list all blog entries, books and podcasts
@@ -308,6 +311,7 @@ List<PodCast> podCasts = PodCast.TABLE.getAll(); // list only podcasts
 Try performing some basic CRUD (Create/Read/Update/Delete) operations.
 
 **Create**
+
 To create an instance of a domain class, all what you need is to instantiate it and call method `insert()`:
 ```
 Person p = new Person();
@@ -317,12 +321,14 @@ p.insert();
 ```
 
 **Read**
+
 HQLite transparently adds an implicit id property to your domain class which you can use for retrieval:
 ```
 Person p = Person.TABLE.get(1);
 ```
 
 **Update**
+
 To update an instance, change some properties and then call `update()` again:
 ```
 Person p = Person.TABLE.get(1);
@@ -331,6 +337,7 @@ p.update();
 ```
 
 **Delete**
+
 To delete an instance use the `delete()` method:
 ```
 Person p = Person.TABLE.get(1);
@@ -338,6 +345,7 @@ p.delete();
 ```
 
 **Save**
+
 If you don't care about if insert or update, use `save()` method whitch will check if the instance has been already inserted (id is not null and row with that id is not null too), to perform an update or insert:
 
 ```
