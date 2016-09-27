@@ -7,6 +7,8 @@ HQLite is a free library that is still under development and distributed under t
 
 HQLite's primary feature is using reflection for mapping from Java classes to database tables; and mapping from Java data types to SQL data types. Whitch also provides data query and retrieval facilities, generating SQL calls and relieves the developer from manual handling and object conversion of the result set.
 
+## Installation
+Just import the folder com.ignite.HQLite to your project.
 
 ## Configuration
 HQLite needs a little Configuration-over-Figuration to make it work:
@@ -15,7 +17,7 @@ HQLite needs a little Configuration-over-Figuration to make it work:
     - The easiest way for that, is placing in the manifest the attribute name of the application tag, pointing to the `com.ignite.HQLite.utils.ApplicationContextProvider` class as below:
     
     
-    ```
+    ```XML
     <application
         android:name="com.ignite.HQLite.utils.ApplicationContextProvider"
         android:label="@string/app_name"
@@ -34,7 +36,7 @@ HQLite needs a little Configuration-over-Figuration to make it work:
     Navigate through the HQlite library folders and find the `com.ignite.HQLite.managers.DatabaseManager` class. In this class you need to set two propperties:
     - The database name.
     - The database version.
-  ```
+  ```Java
 	private static final String DATABASE_NAME = "mydatabase.db";
 	private static final int DATABASE_VERSION = 1;
   ```
@@ -53,7 +55,7 @@ HQLite needs a little Configuration-over-Figuration to make it work:
     - The SQL Console.
     
     	Set to true if you want to print the queries in the console.
-  ```
+  ```Java
 	private static final String DOMAIN_PACKAGE = "";
 	public static final boolean SQL_CONSOLE_ENABLED = true;
   ```
@@ -67,24 +69,24 @@ Domain classes are core to any business application. They hold state about busin
 
 HQLite implements object relational mapping (ORM). Under the hood it uses [SQLite](https://www.sqlite.org/about.html) (a very popular and flexible [public domain library](https://www.sqlite.org/copyright.html)) and thanks to the dynamic reflection of Java, there is far less configuration involved in creating HQLite domain classes and operate with them.
 
-### 1.1 Domain modelling
+### 2 Domain modelling
 When building Android applications you have to consider the problem domain you are trying to solve. For example if you were building an Amazon-style bookstore you would be thinking about books, authors, customers and publishers to name a few.
 These are modeled in HQLite classes, so a `Book` class may have a title, a release date, an ISBN number and so on. The next few sections show how to model the domain in HQLite.
 
-### 1.1.1 Creating a domain class
+### 2.1 Creating a domain class
 To create a domain class you need to extends `com.ignite.HQLite.PersistentEntity` and declare a static field `TABLE` with its `com.ignite.HQLite.managers.EntityManager` as follows:
 
-  ```
+  ```Java
 	public class Book extends PersistentEntity {
 		public static final EntityManager<Book> TABLE = new EntityManager<Book>(){};
 	}
   ```
 This class will map automatically to a table in the database called book (the same name as the class).
 
-### 1.1.2 Defining properties
+### 2.2 Defining properties
 Now that you have a domain class you can define its properties as Java types. For example:
 
-  ```
+  ```Java
 	public class Book extends PersistentEntity {
 		public static final EntityManager<Book> TABLE = new EntityManager<Book>(){};
 		public String title;
@@ -106,15 +108,15 @@ Java type | SQLite type
 
 	* If you need to store a Date, is expected to be a `long` field, and transform it on getter/setter method
 
-### 1.2 Association
+### 2.3 Association
 Relationships define how domain classes interact with each other. Unless specified explicitly at both ends, a relationship exists only in the direction it is defined.
 
-### 1.2.1 Many-to-one and one-to-one
+### 2.3.1 Many-to-one and one-to-one
 A Many-to-one relationship is the simplest kind, and is defined with a property of the type of another domain class. Consider this example:
 
 **Example A**
 
-  ```
+  ```Java
 	public class Face extends PersistentEntity {
 		public static final EntityManager<Face> TABLE = new EntityManager<Face>(){};
 		public Nose nose;
@@ -127,7 +129,7 @@ In this case we have a unidirectional many-to-one relationship from `Face` to `N
 
 **Example B**
 
-  ```
+  ```Java
 	public class Face extends PersistentEntity {
 		...
 		@HasOne(mappedBy = "face")
@@ -144,7 +146,7 @@ In this case we use the `BelongsTo` and `HasOne` annotations to say that `Nose` 
 This also affect the fetch type. If we annotate a field with `BelongsTo`, HQLite will use lazy fetch type to retrieve an empry object with its id. While in the other cases will use eager fetch type.
 
 The result of this is that we can create a `Face`, attach a Nose instance to it and when we save or delete the `Face` instance, HQLite will save or delete the `Nose`. In other words, saves and deletes will cascade from `Face` to the associated `Nose`:
-  ```
+  ```Java
   Face f = new Face();
   f.nose = new Nose();
   f.save();
@@ -152,12 +154,12 @@ The result of this is that we can create a `Face`, attach a Nose instance to it 
 
 Note that using this annotations puts the foreign-key on the inverse table to the example A, so in this case the foreign-key column is stored in the Nose table inside a column called "idFace". Also, `HasOne` only works with bidirectional relationships.
 
-### 1.2.2 One-to-many
+### 2.3.2 One-to-many
 A one-to-many relationship is when one class, example `Author`, has many instances of another class, example `Book`. With HQLite you define such a relationship with the `HasMany` annotation instead of `HasOne`:
 
 **Example C**
 
-  ```
+  ```Java
 	public class Author extends PersistentEntity {
 		...
 		@HasMany(mappedBy = "author")
@@ -177,7 +179,7 @@ Remember that like `HasOne` annotation, `HasMany` will cause cascade saves and d
 If we have more than one property of the same type, attribute `mappedBy` will be used to specify which collection is mapped:
 
 **Example D**
-  ```
+  ```Java
 	public class Airport extends PersistentEntity {
 		...
 		@HasMany(mappedBy = "departureAirport")
@@ -192,7 +194,7 @@ If we have more than one property of the same type, attribute `mappedBy` will be
   ```
 
 **Example E**
-  ```
+  ```Java
 	public class Airport extends PersistentEntity {
 		...
 		@HasMany(mappedBy = "departureAirport")
@@ -208,12 +210,12 @@ If we have more than one property of the same type, attribute `mappedBy` will be
 		Airport destinationAirport;
 	}
   ```
-### 1.2.3 Many-to-many
+### 2.3.3 Many-to-many
 HQLite doesn't supports many-to-many relationships, but here is an example of how to implement your own table for that. Suppose that you want the next model:
 
 **Example F**
 
-  ```
+  ```Java
 	public class Author extends PersistentEntity {
 		...
 		@HasMany(mappedBy = "authors")
@@ -231,7 +233,7 @@ To implement this relationship in HQLite, you need to create a new domain class,
 
 **Example G**
 
-  ```
+  ```Java
 	public class Author extends PersistentEntity {
 		...
 		@HasMany(mappedBy = "author")
@@ -253,7 +255,7 @@ To implement this relationship in HQLite, you need to create a new domain class,
 	}
   ```
   
-### 1.2.4 In conclusion
+### 2.3.4 In conclusion
 HQLite supports/expects the following relationships:
 
 Relationship type | Example of use | Description | Cascade Behaviour
@@ -263,10 +265,10 @@ One-to-one | B | `Face` has one `Nose`. | YES
 One-to-many | C | `Author` has many `Books` | YES
 Many-to-many | G | `Author` has many `Books` and `Book` has many `Authors` | YES
 
-### 1.3 Inheritance
+### 3 Inheritance
 HQLite supports inheritance so simple as extending another domain class
 
-```
+```Java
 	public class Content extends PersistentEntity {
 		public static final EntityManager<Content> TABLE = new EntityManager<Content>(){};
 		
@@ -299,21 +301,21 @@ HQLite implements inheritance using one table for each subclass. However, excess
 
 **Polymorphic Queries**
 
-The upshot of inheritance is that you get the ability to polymorphically query. For example using the getAll() method on the `Content` super class will return all subclasses of `Content`:
-```
+The upshot of inheritance is that you get the ability to polymorphically query. For example using the `getAll()` method on the `Content` super class will return all subclasses of `Content`:
+```Java
 List<Content> contents = Content.TABLE.getAll(); // list all blog entries, books and podcasts
 contents = Content.TABLE.getAllByField("author", "Joe Bloggs"); // find all by author
 contents = PodCast.TABLE.getAll(); // list only podcasts
 List<PodCast> podCasts = PodCast.TABLE.getAll(); // list only podcasts
 ```
 
-### 1.4 Basic CRUD
+### 4 Basic CRUD
 Try performing some basic CRUD (Create/Read/Update/Delete) operations.
 
 **Create**
 
 To create an instance of a domain class, all what you need is to instantiate it and call method `insert()`:
-```
+```Java
 Person p = new Person();
 p.name = "Fred";
 p.age = 40;
@@ -323,14 +325,14 @@ p.insert();
 **Read**
 
 HQLite transparently adds an implicit id property to your domain class which you can use for retrieval:
-```
+```Java
 Person p = Person.TABLE.get(1);
 ```
 
 **Update**
 
 To update an instance, change some properties and then call `update()` again:
-```
+```Java
 Person p = Person.TABLE.get(1);
 p.name = "Bob";
 p.update();
@@ -339,7 +341,7 @@ p.update();
 **Delete**
 
 To delete an instance use the `delete()` method:
-```
+```Java
 Person p = Person.TABLE.get(1);
 p.delete();
 ```
@@ -348,22 +350,51 @@ p.delete();
 
 If you don't care about if insert or update, use `save()` method whitch will check if the instance has been already inserted (id is not null and row with that id is not null too), to perform an update or insert:
 
-```
+```Java
 Person p = new Person();
 p.save(); // Will call insert
 p = Person.TABLE.get(1);
 p.save(); // Will call update
 ```
 
-### 1.5 Constraints
+### 5 Constraints
 Within a domain class constraints are defined with the `Constraints` annotation:
 
-```
+```Java
 public class User extends PersistentEntity {
 	    public static final EntityManager<User> TABLE = new EntityManager<User>(){};
 
 	    @Constraints(unique = true, nullable = false)
 	    public String username = null;
 	    public String password = null;
+}
+```
+
+### 6 Events
+HQLite supports the registration of events as methods that get fired when certain events occurs such as deletes, inserts and updates. The following is a list of supported events:
+
+ * `beforeInsert` - Executed before an object is initially persisted to the database. If you return false, the insert will be cancelled.
+ * `beforeUpdate` - Executed before an object is updated. If you return false, the update will be cancelled.
+ * `beforeDelete` - Executed before an object is deleted. If you return false, the delete will be cancelled.
+ * `afterInsert` - Executed after an object is persisted to the database
+ * `afterUpdate` - Executed after an object has been updated
+ * `afterDelete` - Executed after an object has been deleted
+
+To add an event simply override the relevant method with your domain class. Remember to call super to perform the needed actions in each case.
+
+```Java
+public class Person extends PersistentEntity {
+	public static final EntityManager<Person> TABLE = new EntityManager<Person>(){};
+	    
+	public String firstName;
+	public String lastName;
+	public long signupDate;
+
+	@Override
+	private boolean beforeInsert() {
+		super.beforeInsert(); // HQLite use this methods to perform cascades. Remind to call super
+		signupDate = System.currentTimeMillis();
+		return true; // If everything goes well, return true to continue with insert or false to cancell it.
+	}
 }
 ```
