@@ -398,3 +398,106 @@ public class Person extends PersistentEntity {
 	}
 }
 ```
+
+### 7 Server ids and relationships
+HQLite transparently adds an implicit id property to your domain class which you can use for retrieval. This id is used by default to retrieve the relationship objects. But if your app needs to clone a server database in local, you need to specify whitch property define the relationship in the server to mantain the correspondent object with their owners.
+
+All what you need to do, is adding a propperty named id + name of the domain class and overriding serverId getter/setter as below:
+
+```Java
+public class User extends PersistentEntity {
+    ...
+    public long idUser;
+    @Constraints(unique = true, nullable = false)
+    public String username = null;
+    public String password = null;
+    @HasMany(mappedBy = "user")
+    public List<Account> accounts;
+	    
+    @Override
+    public Long getServerId() {
+        return idUser;
+    }
+
+    @Override
+    public void setServerId(Long id) {
+        this.idUser = id;
+    }
+}
+
+public class Account extends PersistentEntity {
+    ...
+    public long idAccount;
+    public String number;
+    @BelongsTo(mappedBy = "accounts")
+    public User user;
+	    
+    @Override
+    public Long getServerId() {
+        return idAccount;
+    }
+
+    @Override
+    public void setServerId(Long id) {
+        this.idAccount = id;
+    }
+}
+```
+What we want to get here? When you download users from a remote database, that database already have their own ids. So, the column id in the remote database will define the relationship with the other tables. Imagine the following case:
+
+**Server database:**
+
+ * Table User
+
+id | username | password
+--- | --- | ---
+2 | user1 | 123
+5 | user2 | 456
+
+ * Table Account:
+
+id | idUser | number
+--- | --- | ---
+18 | 2 | 0001
+19 | 2 | 0002
+21 | 5 | 0004
+
+**Local database**
+
+ * Table User:
+
+id | idUser | username | password
+--- | --- | --- | ---
+1 | 2 | user1 | 123
+2 | 5 | user2 | 456
+
+ * Table Account:
+
+id | idAccount | idUser | number
+--- | --- | --- | ---
+1 | 18 | 2 | 0001
+2 | 19 | 2 | 0002
+3 | 21 | 5 | 0004
+
+If we dont add the server field and override the serverId getter/setter, HQLite will retrieve the user with the wrong accounts (Not related as in server).
+
+**Example:**
+```Java
+User u1 = User.TABLE.get(1); // Will retrieve an empty account list, but this user has 2 accounts in server
+User u2 = User.TABLE.get(2); // Will retrieve 2 accounts, but this user has only one account in server
+```
+
+### 8 JSON wraper/parser
+
+HQLite implements `JSON` conversion for single instances or lists as the example below:
+
+```Java
+JSONObject oJSONData = ...;
+User user = User.TABLE.parse(oJSONData);
+oJSONData = User.TABLE.wrap(user);
+
+JSONArray aJSONData = ...;
+List<User> users = User.TABLE.parse(aJSONData);
+aJSONData = User.TABLE.wrap(users);
+```
+If the `JSON` object contains a list of accounts, this will be parsed/wrapped too.
