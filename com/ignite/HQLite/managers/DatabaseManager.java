@@ -22,11 +22,11 @@ import java.io.IOException;
 public class DatabaseManager extends SQLiteOpenHelper {
 
     /** Set to true if you need to print the SQL queries in the console */
-    public static final boolean SQL_CONSOLE_ENABLED = Constants.DEBUG;
+    public static final boolean SQL_CONSOLE_ENABLED = true;
     /** Defines the name of the identifier column in all tables */
     public static final String ID_COLUMN_NAME = "_id";
     /** The name of the database file that will be stored, it's must end with .db extension */
-	private static final String DATABASE_NAME = "networker.db";
+	private static final String DATABASE_NAME = "mydatabase.db";
     /** Number of the database version, should be increased on each database modification to recreate the database */
     private static final int DATABASE_VERSION = 1;
     /** Name of the package where the domain classes are placed, if set to "", HQLite will search in all the application */
