@@ -53,7 +53,7 @@ HQLite needs a little Configuration-over-Figuration to make it work:
     
   * Define some setting of the database file:
   
-    Navigate through the HQlite library folders and find the `com.ignite.HQLite.managers.DatabaseManager` class. In this class you need to set two propperties:
+    Navigate through the HQlite library folders and find the `com.ignite.HQLite.managers.DatabaseManager` class. In this class you need to set two properties:
     - The database name.
     - The database version.
   ```Java
@@ -420,13 +420,18 @@ public class Person extends PersistentEntity {
 ```
 
 ### 7 Server ids and relationships
-HQLite transparently adds an implicit id property to your domain class which you can use for retrieval. This id is used by default to retrieve the relationship objects. But if your app needs to clone a server database in local, you need to specify whitch property define the relationship in the server to mantain the correspondent object with their owners.
+HQLite transparently adds an implicit id property to your domain class which you can use for retrieval. This id is used by default to retrieve the relationship objects. But if your app needs to clone/download a server database in local, you need to specify whitch property define the relationship in the server to mantain the correspondent object with their owners.
 
-All what you need to do, is adding a propperty named id + name of the domain class and overriding serverId getter/setter as below:
+All what you need to do, is adding a property named id + name of the domain class and overriding serverId getter/setter/getBy as below:
 
 ```Java
 public class User extends PersistentEntity {
-    ...
+    public static final EntityManager<User> TABLE = new EntityManager<User>(){
+        @Override
+        public User getByServerId(long id) {
+            return getByField("idUser", id);
+        }
+    };
     public long idUser;
     @Constraints(unique = true, nullable = false)
     public String username = null;
@@ -446,7 +451,12 @@ public class User extends PersistentEntity {
 }
 
 public class Account extends PersistentEntity {
-    ...
+    public static final EntityManager<Account> TABLE = new EntityManager<Account>(){
+        @Override
+        public Account getByServerId(long id) {
+            return getByField("idAccount", id);
+        }
+    };
     public long idAccount;
     public String number;
     @BelongsTo(mappedBy = "accounts")
@@ -499,7 +509,7 @@ id | idAccount | idUser | number
 2 | 19 | 2 | 0002
 3 | 21 | 5 | 0004
 
-If we dont add the server field and override the serverId getter/setter, HQLite will retrieve the user with the wrong accounts (Not related as in server).
+If we dont add the server field and override the serverId getter/setter and getByServerId(), HQLite will retrieve the user with the wrong accounts (Not related as in server).
 
 **Example:**
 ```Java
