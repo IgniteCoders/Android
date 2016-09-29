@@ -4,11 +4,11 @@ This repository contains libraries developed by IgniteCoders, with the purpose t
 
 ## Content
 
- - **HQLite**
+ - **HQLite** (Beta)
 
  HQLite is an object-relational mapping framework for the Android platform based on SQLite database.
 
- - **HTTPClient** (Not documented yet)
+ - **HTTPClient**
 
  HTTPClient is an util class to call a given url and retrieve the response string.
  
