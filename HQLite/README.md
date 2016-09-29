@@ -7,24 +7,24 @@ HQLite is a free library that is still under development and distributed under t
 
 HQLite's primary feature is using reflection for mapping from Java classes to database tables; and mapping from Java data types to SQL data types. Whitch also provides data query and retrieval facilities, generating SQL calls and relieves the developer from manual handling and object conversion of the result set.
 
- * [Installation](https://github.com/IgniteCoders/HQLite#installation)
- * [Configuration](https://github.com/IgniteCoders/HQLite#configuration)
- * [Usage](https://github.com/IgniteCoders/HQLite#usage)
- 	- [1 Quick Start Guide](https://github.com/IgniteCoders/HQLite#1-quick-start-guide)
- 	- [2 Domain modelling](https://github.com/IgniteCoders/HQLite#2-domain-modelling)
- 		- [2.1 Creating a domain class](https://github.com/IgniteCoders/HQLite#21-creating-a-domain-class)
- 		- [2.2 Defining properties](https://github.com/IgniteCoders/HQLite#22-defining-properties)
- 		- [2.3 Association](https://github.com/IgniteCoders/HQLite#23-association)
- 			- [2.3.1 Many-to-one and one-to-one](https://github.com/IgniteCoders/HQLite#231-many-to-one-and-one-to-one)
- 			- [2.3.2 One-to-many](https://github.com/IgniteCoders/HQLite#232-one-to-many)
- 			- [2.3.3 Many-to-many](https://github.com/IgniteCoders/HQLite#233-many-to-many)
- 			- [2.3.4 In conclusion](https://github.com/IgniteCoders/HQLite#234-in-conclusion)
- 	- [3 Inheritance](https://github.com/IgniteCoders/HQLite#3-inheritance)
- 	- [4 Basic CRUD](https://github.com/IgniteCoders/HQLite#4-basic-crud)
- 	- [5 Constraints](https://github.com/IgniteCoders/HQLite#5-constraints)
- 	- [6 Events](https://github.com/IgniteCoders/HQLite#6-events)
- 	- [7 Server ids and relationships](https://github.com/IgniteCoders/HQLite#7-server-ids-and-relationships)
- 	- [8 JSON wraper/parser](https://github.com/IgniteCoders/HQLite#8-json-wraperparser)
+ * [Installation](https://github.com/IgniteCoders/Android/tree/master/HQLite#installation)
+ * [Configuration](https://github.com/IgniteCoders/Android/tree/master/HQLite#configuration)
+ * [Usage](https://github.com/IgniteCoders/Android/tree/master/HQLite#usage)
+ 	- [1 Quick Start Guide](https://github.com/IgniteCoders/Android/tree/master/HQLite#1-quick-start-guide)
+ 	- [2 Domain modelling](https://github.com/IgniteCoders/Android/tree/master/HQLite#2-domain-modelling)
+ 		- [2.1 Creating a domain class](https://github.com/IgniteCoders/Android/tree/master/HQLite#21-creating-a-domain-class)
+ 		- [2.2 Defining properties](https://github.com/IgniteCoders/Android/tree/master/HQLite#22-defining-properties)
+ 		- [2.3 Association](https://github.com/IgniteCoders/Android/tree/master/HQLite#23-association)
+ 			- [2.3.1 Many-to-one and one-to-one](https://github.com/IgniteCoders/Android/tree/master/HQLite#231-many-to-one-and-one-to-one)
+ 			- [2.3.2 One-to-many](https://github.com/IgniteCoders/Android/tree/master/HQLite#232-one-to-many)
+ 			- [2.3.3 Many-to-many](https://github.com/IgniteCoders/Android/tree/master/HQLite#233-many-to-many)
+ 			- [2.3.4 In conclusion](https://github.com/IgniteCoders/Android/tree/master/HQLite#234-in-conclusion)
+ 	- [3 Inheritance](https://github.com/IgniteCoders/Android/tree/master/HQLite#3-inheritance)
+ 	- [4 Basic CRUD](https://github.com/IgniteCoders/Android/tree/master/HQLite#4-basic-crud)
+ 	- [5 Constraints](https://github.com/IgniteCoders/Android/tree/master/HQLite#5-constraints)
+ 	- [6 Events](https://github.com/IgniteCoders/Android/tree/master/HQLite#6-events)
+ 	- [7 Server ids and relationships](https://github.com/IgniteCoders/Android/tree/master/HQLite#7-server-ids-and-relationships)
+ 	- [8 JSON wraper/parser](https://github.com/IgniteCoders/Android/tree/master/HQLite#8-json-wraperparser)
 
 
 ## Installation
@@ -70,7 +70,7 @@ HQLite needs a little Configuration-over-Figuration to make it work:
     
     - The package name where you will place your domain classes.
     
-    	This is used to enhance the search of your classes, if you set it to "", HQLite will search in all the application for every class thats extends `com.ignite.HQLite.PersistentEntity`.
+    	This is used to enhance the search of your classes, if you set it to `""`, HQLite will search in all the application for every class thats extends `com.ignite.HQLite.PersistentEntity`.
 	
     - The SQL Console.
     
