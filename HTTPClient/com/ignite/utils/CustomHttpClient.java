@@ -22,19 +22,36 @@ import org.apache.http.protocol.HTTP;
 
 import android.util.Log;
 
+/**
+ * Client used to interact with the network context by HTTP requests.
+ *
+ * CustomHttpClient can make calls via GET or POST with the given params and retrieve the resulting string.
+ */
 public class CustomHttpClient {
+
+    /**
+     * Enum to store the request types.
+     */
     public enum HttpMethod {
         GET,
         POST,
     }
 
+    /** Set to true if you need to print the URLs calls and responses in the console. */
     private static final boolean HTTP_CONSOLE_ENABLED           = true;
-    public static final String JSON_PREFIX                     = "JSONResponse";
+    /** Set the default request type. If you dont specify in the call, this will be used. */
     private static final HttpMethod DEFAULT_CONNECTION_METHOD   = HttpMethod.GET;
+    /** Define the time in milliseconds to cancel calls if server is not responding */
     private static final int CONNECTION_TIMEOUT                 = 10000;
+    /** Provide a list of possible responses to validate them; Set to null if you dont want to check */
+    private static final String[] VALID_RESPONSES               = null; // Example: {"true", "false"}; 
+    /** If your app will download JSONs, you can set a prefix to validate them. */
+    public static final String JSON_PREFIX                      = "JSONResponse";
 
+    /** Apache HttpClient used for establish connection with server */
     private static HttpClient httpClient;
 
+    /** Return the HttpClient with the default configuration */
     private synchronized static HttpClient getHttpClient(){
         if(httpClient == null){
             httpClient = new DefaultHttpClient();
@@ -46,14 +63,34 @@ public class CustomHttpClient {
         return httpClient;
     }
 
+    /** Execute a call to the given url with the default connection method.
+     *
+     * @param url to call as target of the request.
+     * @return the response text retrieved in the request.
+     */
+    public synchronized static String execute(String url) throws Exception {
+        return execute(url, new ArrayList<NameValuePair>());
+    }
+
+    /** Execute a call to the given url with the given params with the default connection method.
+     *
+     * @param url to call as target of the request.
+     * @param params to send in the request.
+     * @return the response text retrieved in the request.
+     */
     public synchronized static String execute(String url, ArrayList<NameValuePair> params) throws Exception {
         return execute(url, params, DEFAULT_CONNECTION_METHOD);
     }
 
+    /** Execute a call to the given url with the given params with the specified connection method.
+     *
+     * @param url to call as target of the request.
+     * @param params to send in the request.
+     * @param method that will be used for the request.
+     * @return the response text retrieved in the request.
+     */
     public synchronized static String execute(String url, ArrayList<NameValuePair> params, HttpMethod method) throws Exception {
-
         BufferedReader in = null;
-
         try{
             HttpClient client = getHttpClient();
             HttpResponse response = null;
@@ -75,11 +112,12 @@ public class CustomHttpClient {
 
             StringBuffer sb = new StringBuffer("");
             String line = "";
-            String NL = System.getProperty("line.separator");
+            String lineSeparator = System.getProperty("line.separator");
             while ((line = in.readLine()) != null) {
-                sb.append(line + NL);
+                sb.append(line + lineSeparator);
             }
             String result = sb.toString();
+
             if (HTTP_CONSOLE_ENABLED) {
                 Log.i("HTTP", url);
                 Log.i("HTTP", result);
@@ -105,6 +143,11 @@ public class CustomHttpClient {
         return "false";
     }
 
+    /** Method for encode a string with params as URL specification for "GET" connection method.
+     *
+     * @param params to encode in the string.
+     * @return the string containing the params encoded with UTF-8.
+     */
     public static String paramsToString(ArrayList<NameValuePair> params) throws Exception {
         StringBuilder sb = new StringBuilder();
         for (NameValuePair param : params) {
@@ -122,20 +165,28 @@ public class CustomHttpClient {
         return sb.toString();
     }
 
+    /** Method to check if a response is valid to handle in the app or is just an error in server.
+     *
+     * @param response to check if is valid.
+     * @return true if pass all checks successfully, false if not.
+     */
     public static boolean isValidHttpResponse(String response) {
-        String replacedResponse = response.replaceAll("\\n", ""); 	// Elimino \n
-        replacedResponse = replacedResponse.replaceAll("\\{", "");	// Elimino {
-        replacedResponse = replacedResponse.replaceAll("\\}", "");	// Elimino {
-        replacedResponse = replacedResponse.replaceAll(" ", "");	// Elimino Espacios en Blanco
-        replacedResponse = replacedResponse.replaceAll("\"", "");	// Elimino "
+        if (VALID_RESPONSES != null) {
+            String replacedResponse = response.replaceAll("\\n", "");    // Newline
+            replacedResponse = replacedResponse.replaceAll("\\{", "");    // {
+            replacedResponse = replacedResponse.replaceAll("\\}", "");    // }
+            replacedResponse = replacedResponse.replaceAll(" ", "");    // White spaces
+            replacedResponse = replacedResponse.replaceAll("\"", "");    // Double cuotes
 
-        if (replacedResponse.equalsIgnoreCase("true")) return true;
-        if (replacedResponse.equalsIgnoreCase("false")) return true;
-        if (replacedResponse.equalsIgnoreCase("0")) return true;
-        if (replacedResponse.equalsIgnoreCase("1")) return true;
-        if (replacedResponse.equalsIgnoreCase("2")) return true;
-        if (replacedResponse.substring(0, JSON_PREFIX.length()).equalsIgnoreCase(JSON_PREFIX)) return true;
+            for (String validResponse : VALID_RESPONSES) {
+                if (replacedResponse.equalsIgnoreCase(validResponse)) return true;
+            }
 
-        return false;
+            if (replacedResponse.substring(0, JSON_PREFIX.length()).equalsIgnoreCase(JSON_PREFIX)) return true;
+
+            return false;
+        } else {
+            return true;
+        }
     }
 }
