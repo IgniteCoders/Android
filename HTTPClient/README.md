@@ -50,7 +50,6 @@ try {
 
     String response = new CustomHttpClient().execute(serverUrl, parameters, CustomHttpClient.HttpMethod.POST);
 
-    publishProgress(Long.valueOf(10));
     if(response.equals("true")){
         return 1; // Login success
     } else if ( response.equals("false")) {
