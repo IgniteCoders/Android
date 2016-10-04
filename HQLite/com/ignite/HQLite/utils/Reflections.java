@@ -94,6 +94,7 @@ public class Reflections {
         Context context = ApplicationContextProvider.getContext();
         ArrayList<Class> classes = new ArrayList<Class>();
         String packageCodePath = context.getPackageCodePath();
+        System.out.println(packageCodePath);
         DexFile df = new DexFile(packageCodePath);
         for (Enumeration<String> iter = df.entries(); iter.hasMoreElements(); ) {
             String className = iter.nextElement();
@@ -101,6 +102,7 @@ public class Reflections {
                 try {
                     Class candidateClass = Class.forName(className);
                     if (parentClass.isAssignableFrom(candidateClass) && parentClass != candidateClass) {
+                        SQLConsole.Log(className);
                         classes.add(candidateClass);
                     }
                 } catch (NoClassDefFoundError e) {

@@ -2,22 +2,22 @@ package com.ignite.HQLite;
 
 import com.ignite.HQLite.annotations.HasMany;
 import com.ignite.HQLite.annotations.HasOne;
-import com.ignite.HQLite.managers.EntityFieldHelper;
-import com.ignite.HQLite.managers.EntityManager;
+import com.ignite.HQLite.utils.EntityFieldHelper;
 import com.ignite.HQLite.utils.Reflections;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
 
 public abstract class PersistentEntity {
 	
-	private Long _id = null;
+	public Long id = null;
 
 	public EntityManager getTableData() {
         EntityManager tableData;
         try {
-            Field field = getClass().getDeclaredField("TABLE");
+            Field field = getClass().getDeclaredField(Configuration.ACCESS_PROPERTY);
             tableData = (EntityManager) field.get(this);
         } catch (Exception e) {
             tableData = null;
@@ -53,7 +53,7 @@ public abstract class PersistentEntity {
         if (beforeInsert() == true) {
             long insertId = getTableData().insert(this);
             if (insertId > -1) {
-                this._id = insertId;
+                this.id = insertId;
                 afterInsert();
                 return true;
             } else {
@@ -68,28 +68,21 @@ public abstract class PersistentEntity {
         List<Field> fields = EntityFieldHelper.getRelationFields(getTableData().getDomainClass());
         for (Field field : fields) {
             try {
+                List<PersistentEntity> childs = new ArrayList<PersistentEntity>();
+                String mappedBy = "";
                 if (field.isAnnotationPresent(HasMany.class)) {
                     HasMany hasMany = field.getAnnotation(HasMany.class);
-                    List<PersistentEntity> childs = (List) field.get(this);
-                    if (childs != null) {
-                        for (PersistentEntity child : childs) {
-                            Field childField = Reflections.getDeclaredFieldRecursively(hasMany.mappedBy(), child.getClass(), PersistentEntity.class);
-                            boolean accessible = childField.isAccessible();
-                            childField.setAccessible(true);
-                            childField.set(child, this);
-                            childField.setAccessible(accessible);
-                            child.insert();
-                        }
-                    }
+                    mappedBy = hasMany.mappedBy();
+                    childs = (List) field.get(this);
                 } else if (field.isAnnotationPresent(HasOne.class)) {
                     HasOne hasOne = field.getAnnotation(HasOne.class);
-                    PersistentEntity child = (PersistentEntity) field.get(this);
-                    if (child != null) {
-                        Field childField = Reflections.getDeclaredFieldRecursively(hasOne.mappedBy(), child.getClass(), PersistentEntity.class);
-                        boolean accessible = childField.isAccessible();
-                        childField.setAccessible(true);
-                        childField.set(child, this);
-                        childField.setAccessible(accessible);
+                    mappedBy = hasOne.mappedBy();
+                    childs.add((PersistentEntity) field.get(this));
+                }
+                if (childs != null) {
+                    for (PersistentEntity child : childs) {
+                        Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
+                        EntityFieldHelper.setFieldFromValue(this, childField, child);
                         child.insert();
                     }
                 }
@@ -138,29 +131,22 @@ public abstract class PersistentEntity {
         List<Field> fields = EntityFieldHelper.getRelationFields(getTableData().getDomainClass());
         for (Field field : fields) {
             try {
+                List<PersistentEntity> childs = new ArrayList<PersistentEntity>();
+                String mappedBy = "";
                 if (field.isAnnotationPresent(HasMany.class)) {
                     HasMany hasMany = field.getAnnotation(HasMany.class);
-                    List<PersistentEntity> childs = (List) field.get(this);
-                    if (childs != null) {
-                        for (PersistentEntity child : childs) {
-                            Field childField = Reflections.getDeclaredFieldRecursively(hasMany.mappedBy(), child.getClass(), PersistentEntity.class);
-                            boolean accessible = childField.isAccessible();
-                            childField.setAccessible(true);
-                            childField.set(child, this);
-                            childField.setAccessible(accessible);
-                            child.update();
-                        }
-                    }
+                    mappedBy = hasMany.mappedBy();
+                    childs = (List) field.get(this);
                 } else if (field.isAnnotationPresent(HasOne.class)) {
                     HasOne hasOne = field.getAnnotation(HasOne.class);
-                    PersistentEntity child = (PersistentEntity) field.get(this);
-                    if (child != null) {
-                        Field childField = Reflections.getDeclaredFieldRecursively(hasOne.mappedBy(), child.getClass(), PersistentEntity.class);
-                        boolean accessible = childField.isAccessible();
-                        childField.setAccessible(true);
-                        childField.set(child, this);
-                        childField.setAccessible(accessible);
-                        child.update();
+                    mappedBy = hasOne.mappedBy();
+                    childs.add((PersistentEntity) field.get(this));
+                }
+                if (childs != null) {
+                    for (PersistentEntity child : childs) {
+                        Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
+                        EntityFieldHelper.setFieldFromValue(this, childField, child);
+                        child.insert();
                     }
                 }
             } catch (IllegalAccessException e) {
@@ -170,7 +156,7 @@ public abstract class PersistentEntity {
     }
 	
 	public boolean save() {
-		if (this.getTableData().get(_id) == null) {
+		if (this.getTableData().get(id) == null) {
 			return insert();
 		} else {
 			return update();
@@ -181,30 +167,21 @@ public abstract class PersistentEntity {
         List<Field> fields = EntityFieldHelper.getRelationFields(getTableData().getDomainClass());
         for (Field field : fields) {
             try {
+                List<PersistentEntity> childs = new ArrayList<PersistentEntity>();
+                String mappedBy = "";
                 if (field.isAnnotationPresent(HasMany.class)) {
                     HasMany hasMany = field.getAnnotation(HasMany.class);
-                    List<PersistentEntity> childs = (List) field.get(this);
-                    if (childs != null) {
-                        for (PersistentEntity child : childs) {
-                            Field childField = Reflections.getDeclaredFieldRecursively(hasMany.mappedBy(), child.getClass(), PersistentEntity.class);
-                            boolean accessible = childField.isAccessible();
-                            childField.setAccessible(true);
-                            childField.set(child, this);
-                            childField.setAccessible(accessible);
-                            if(child.delete() == false) {
-                                return false;
-                            }
-                        }
-                    }
+                    mappedBy = hasMany.mappedBy();
+                    childs = (List) field.get(this);
                 } else if (field.isAnnotationPresent(HasOne.class)) {
                     HasOne hasOne = field.getAnnotation(HasOne.class);
-                    PersistentEntity child = (PersistentEntity) field.get(this);
-                    if (child != null) {
-                        Field childField = Reflections.getDeclaredFieldRecursively(hasOne.mappedBy(), child.getClass(), PersistentEntity.class);
-                        boolean accessible = childField.isAccessible();
-                        childField.setAccessible(true);
-                        childField.set(child, this);
-                        childField.setAccessible(accessible);
+                    mappedBy = hasOne.mappedBy();
+                    childs.add((PersistentEntity) field.get(this));
+                }
+                if (childs != null) {
+                    for (PersistentEntity child : childs) {
+                        Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
+                        EntityFieldHelper.setFieldFromValue(this, childField, child);
                         if(child.delete() == false) {
                             return false;
                         }
@@ -247,11 +224,11 @@ public abstract class PersistentEntity {
     }
 
     public Long getId() {
-        return _id;
+        return id;
     }
 
     public void setId(long id) {
-        this._id = id;
+        this.id = id;
     }
 
     public Long getServerId() {
@@ -260,5 +237,10 @@ public abstract class PersistentEntity {
 
     public void setServerId(Long id) {
         setId(id);
+    }
+
+    @Override
+    public String toString() {
+        return getTableData().getTableName() + ": " + this.id;
     }
 }

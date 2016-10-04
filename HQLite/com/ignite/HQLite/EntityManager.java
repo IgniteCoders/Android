@@ -1,10 +1,17 @@
-package com.ignite.HQLite.managers;
+package com.ignite.HQLite;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
 
-import com.ignite.HQLite.PersistentEntity;
+import com.ignite.HQLite.utils.ApplicationContextProvider;
+import com.ignite.HQLite.utils.EntityFieldHelper;
 import com.ignite.HQLite.utils.Reflections;
+import com.ignite.HQLite.utils.SQLConsole;
+import com.ignite.HQLite.utils.SQLQueryGenerator;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,7 +31,26 @@ public abstract class EntityManager<E extends PersistentEntity> {
 	private String[] columnNames = null;
 	private Class domainClass = null;
 	private List<Field> columnFields = null;
-    private DatabaseConnector connector;
+
+    private Context context;
+    private SQLiteDatabase database;
+    private DatabaseManager databaseManager;
+
+    /**
+     * Open a new database connection
+     */
+    private void open() throws SQLException {
+        context = ApplicationContextProvider.getContext();
+        databaseManager = new DatabaseManager(context);
+        database = databaseManager.getReadableDatabase();
+    }
+
+    /**
+     * Close the database connection
+     */
+    private void close() {
+        databaseManager.close();
+    }
 
     /** Retrieve the domain class <code>E extends PersistentEntity</code> from the types arguments.
      *
@@ -75,17 +101,6 @@ public abstract class EntityManager<E extends PersistentEntity> {
 		return columnNames;
 	}
 
-    /** Create a new database connection to perform actions and queries in the table asociated to this entity manager.
-     *
-     * @return the database connection.
-     */
-    protected DatabaseConnector getConnector() {
-        if (connector == null) {
-            connector = new DatabaseConnector(this);
-        }
-        return connector;
-    }
-
     /** Creates an object from the stored data in the cursor.
      *
      * @param cursor with the data of the query. It's should be pointing to the needed row.
@@ -96,7 +111,7 @@ public abstract class EntityManager<E extends PersistentEntity> {
 			Class domainClass = this.getDomainClass();
 			E object = (E) domainClass.newInstance();
 
-			object.setId(cursor.getLong(cursor.getColumnIndex(DatabaseManager.ID_COLUMN_NAME)));
+			object.setId(cursor.getLong(cursor.getColumnIndex(Configuration.ID_COLUMN_NAME)));
 			for (Field field : this.getColumnFields()) {
                 object = (E) EntityFieldHelper.setFieldFromCursor(object, field, cursor);
 			}
@@ -124,7 +139,7 @@ public abstract class EntityManager<E extends PersistentEntity> {
 	public ContentValues getContentValues (E object) {
         ContentValues values = new ContentValues();
         if (object.getId() != null) {
-            values.put(DatabaseManager.ID_COLUMN_NAME, object.getId());
+            values.put(Configuration.ID_COLUMN_NAME, object.getId());
         }
         for (Field field : this.getColumnFields()) {
             if (!EntityFieldHelper.isCollectionRelationField(field)) {
@@ -236,47 +251,53 @@ public abstract class EntityManager<E extends PersistentEntity> {
         return superObject;
     }
 
+    /**
+     * Convenience method for persisting a object into the database.
+     *
+     * @param object the object to persist in the database
+     * @throws SQLException
+     * @return the row ID of the newly persisted object, or -1 if an error occurred
+     */
     public long insert(E object) {
-        DatabaseConnector dbConnection = this.getConnector();
-        dbConnection.open();
-        long insertedId = dbConnection.insert(object);
-        dbConnection.close();
+        open();
+        SQLConsole.LogInsert(object);
+        long insertedId = database.insertOrThrow(getTableName(), null, getContentValues(object));
+        close();
         return insertedId;
     }
 
+    /**
+     * Convenience method for updating a object already inserted into the database.
+     *
+     * @param object the object to update in the database
+     * @throws SQLException
+     * @return the number of rows affected
+     */
     public int update(E object) {
-        DatabaseConnector dbConnection = this.getConnector();
-        dbConnection.open();
-        int updatedRows = dbConnection.update(object);
-        dbConnection.close();
+        open();
+        SQLConsole.LogUpdate(object);
+        int updatedRows = database.update(getTableName(), getContentValues(object), Configuration.ID_COLUMN_NAME + "=" + object.getId(), null);
+        close();
         return updatedRows;
     }
 
+    /**
+     * Convenience method for removing objects from the database.
+     *
+     * @param object the object to remove from the database
+     * @return the number of rows affected, 1 if deleted correctly, 0 otherwise
+     */
     public int delete(E object) {
-        DatabaseConnector dbConnection = this.getConnector();
-        dbConnection.open();
-        int deletedRows = dbConnection.delete(object);
-        dbConnection.close();
+        open();
+        SQLConsole.LogDelete(object);
+        int deletedRows = database.delete(getTableName(), Configuration.ID_COLUMN_NAME + "=" + object.getId(), null);
+        close();
         return deletedRows;
     }
 
+    // Methods for retrieve rows from database
 	public E get(long id) {
-        DatabaseConnector dbConnection = this.getConnector();
-        dbConnection.open();
-		E object = null;
-		Cursor cursor = dbConnection.get(id);
-		try {
-			if (cursor.moveToFirst()) {
-				object = cursorToEntity(cursor);
-			}
-		}catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-			cursor.close();
-            dbConnection.close();
-		}
-
-		return object;
+		return getByField(Configuration.ID_COLUMN_NAME, id);
 	}
 
     public E getByServerId(long id) {
@@ -284,10 +305,11 @@ public abstract class EntityManager<E extends PersistentEntity> {
     }
 
     public E getByField(String key, Object value) {
-        DatabaseConnector dbConnection = this.getConnector();
-        dbConnection.open();
+        open();
         E object = null;
-        Cursor cursor = dbConnection.getByField(key, value);
+        String sqlQry = SQLiteQueryBuilder.buildQueryString(false, getTableName(), getColumnNames(), key + "=" + value.toString(), null, null, null, null);
+        SQLConsole.Log(sqlQry);
+        Cursor cursor = database.query(getTableName(), getColumnNames(), key + "='" + value.toString() + "'", null, null, null, null);
         try {
             if (cursor.moveToFirst()) {
                 object = cursorToEntity(cursor);
@@ -296,17 +318,17 @@ public abstract class EntityManager<E extends PersistentEntity> {
             e.printStackTrace();
         } finally {
             cursor.close();
-            dbConnection.close();
+            close();
         }
-
         return object;
     }
 
 	public List<E> getAll() {
-        DatabaseConnector dbConnection = this.getConnector();
-        dbConnection.open();
+        open();
 		List<E> listObjects = new ArrayList<E>();
-		Cursor cursor = dbConnection.getAll();
+        String sqlQry = SQLiteQueryBuilder.buildQueryString(false, getTableName(), getColumnNames(), null, null, null, null, null);
+        SQLConsole.Log(sqlQry);
+        Cursor cursor = database.query(getTableName(), getColumnNames(), null, null, null, null, null);
 		try{
 			for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
 				E object = cursorToEntity(cursor);
@@ -316,19 +338,17 @@ public abstract class EntityManager<E extends PersistentEntity> {
             e.printStackTrace();
         } finally {
 			cursor.close();
-            dbConnection.close();
+            close();
 		}
-
-
-
 		return listObjects;
 	}
 
 	public List<E> getAllByField(String key, Object value) {
 		List<E> listObjects = new ArrayList<E>();
-        DatabaseConnector dbConnection = this.getConnector();
-        dbConnection.open();
-        Cursor cursor = dbConnection.getAllByField(key, value);
+        open();
+        String sqlQry = SQLiteQueryBuilder.buildQueryString(false, getTableName(), getColumnNames(), key + "=" + value.toString(), null, null, null, null);
+        SQLConsole.Log(sqlQry);
+        Cursor cursor = database.query(getTableName(), getColumnNames(), key + "=" + value.toString(), null, null, null, null);
         try {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 E object = cursorToEntity(cursor);
@@ -338,16 +358,26 @@ public abstract class EntityManager<E extends PersistentEntity> {
             e.printStackTrace();
         } finally {
             cursor.close();
-            dbConnection.close();
+            close();
         }
 		return listObjects;
 	}
 
 	public List<E> getAllByFieldInList(String key, Object[] values) {
 		List<E> listObjects = new ArrayList<E>();
-        DatabaseConnector dbConnection = this.getConnector();
-        dbConnection.open();
-        Cursor cursor = dbConnection.getAllByFieldInList(key, values);
+        String inClause = "(";
+        for(int i = 0; i < values.length; i++){
+            inClause += values[i].toString();
+            if(i != (values.length - 1)){
+                inClause += ",";
+            }
+        }
+        inClause += ")";
+
+        open();
+        String sqlQry = SQLiteQueryBuilder.buildQueryString(false, getTableName(), getColumnNames(), key + " in " + inClause, null, null, null, null);
+        SQLConsole.Log(sqlQry);
+        Cursor cursor = database.query(getTableName(), getColumnNames(), key + " in " + inClause, null, null, null, null);
         try {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 E object = cursorToEntity(cursor);
@@ -357,8 +387,26 @@ public abstract class EntityManager<E extends PersistentEntity> {
             e.printStackTrace();
         } finally {
             cursor.close();
-            dbConnection.close();
+            close();
         }
 		return listObjects;
 	}
+
+    public List<E> getWithCriteria() {
+        List<E> listObjects = new ArrayList<E>();
+        open();
+        Cursor cursor = database.query(getTableName(), getColumnNames(), null, null, null, null, null);
+        try {
+            for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                E object = cursorToEntity(cursor);
+                listObjects.add(object);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            cursor.close();
+            close();
+        }
+        return listObjects;
+    }
 }

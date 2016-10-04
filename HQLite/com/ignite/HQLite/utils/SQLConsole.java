@@ -1,9 +1,9 @@
 package com.ignite.HQLite.utils;
 
+import android.util.Log;
+
+import com.ignite.HQLite.Configuration;
 import com.ignite.HQLite.PersistentEntity;
-import com.ignite.HQLite.managers.EntityFieldHelper;
-import com.ignite.HQLite.managers.SQLQueryGenerator;
-import com.ignite.HQLite.managers.DatabaseManager;
 
 import java.lang.reflect.Field;
 
@@ -14,13 +14,13 @@ public class SQLConsole {
     private static final String TAG = "DatabaseManager";
 
     public static void Log(String message) {
-        if (DatabaseManager.SQL_CONSOLE_ENABLED) {
-            System.out.println(message);
+        if (Configuration.SQL_CONSOLE_ENABLED) {
+            Log.i(TAG, message);
         }
     }
 
     public static void LogInsert(PersistentEntity insertedObject) {
-        if (DatabaseManager.SQL_CONSOLE_ENABLED) {
+        if (Configuration.SQL_CONSOLE_ENABLED) {
             try {
                 String sqlQry = "INSERT INTO " + insertedObject.getTableData().getTableName() + " (_id";
                 String sqlValues = "VALUES (" + insertedObject.getId();
@@ -33,7 +33,7 @@ public class SQLConsole {
                     }
                 }
                 sqlQry += ") " + sqlValues + ")";
-                System.out.println(sqlQry);
+                Log.i(TAG, sqlQry);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -41,7 +41,7 @@ public class SQLConsole {
     }
 
     public static void LogUpdate(PersistentEntity updatedObject) {
-        if (DatabaseManager.SQL_CONSOLE_ENABLED) {
+        if (Configuration.SQL_CONSOLE_ENABLED) {
             try {
                 String sqlQry = "UPDATE " + updatedObject.getTableData().getTableName() + " SET ";
                 for (int i = 0; i < updatedObject.getTableData().getColumnFields().size(); i ++) {
@@ -51,8 +51,8 @@ public class SQLConsole {
                         sqlQry += ", " + columnName + " = " + field.get(updatedObject);
                     }
                 }
-                sqlQry += " WHERE " + DatabaseManager.ID_COLUMN_NAME + "=" + updatedObject.getId();
-                System.out.println(sqlQry);
+                sqlQry += " WHERE " + Configuration.ID_COLUMN_NAME + "=" + updatedObject.getId();
+                Log.i(TAG, sqlQry);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -60,10 +60,10 @@ public class SQLConsole {
     }
 
     public static void LogDelete(PersistentEntity deletedObject) {
-        if (DatabaseManager.SQL_CONSOLE_ENABLED) {
+        if (Configuration.SQL_CONSOLE_ENABLED) {
             try {
-                String sqlQry = "DELETE FROM " + deletedObject.getTableData().getTableName() + " WHERE " + DatabaseManager.ID_COLUMN_NAME + "=" + deletedObject.getId();
-                System.out.println(sqlQry);
+                String sqlQry = "DELETE FROM " + deletedObject.getTableData().getTableName() + " WHERE " + Configuration.ID_COLUMN_NAME + "=" + deletedObject.getId();
+                Log.i(TAG, sqlQry);
             } catch (Exception e) {
                 e.printStackTrace();
             }

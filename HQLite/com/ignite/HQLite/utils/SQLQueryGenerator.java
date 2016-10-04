@@ -1,7 +1,10 @@
-package com.ignite.HQLite.managers;
+package com.ignite.HQLite.utils;
 
+import com.ignite.HQLite.Configuration;
 import com.ignite.HQLite.PersistentEntity;
+import com.ignite.HQLite.annotations.BelongsTo;
 import com.ignite.HQLite.annotations.Constraints;
+import com.ignite.HQLite.annotations.HasOne;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -66,7 +69,7 @@ public class SQLQueryGenerator {
      * @param field the field of the persistent entity
      * @return the column declaration as "field name" + "field type" + "field constraints"
      */
-    public static String getColumnDeclaration(Field field) {
+    private static String getColumnDeclaration(Field field) {
         return (getColumnName(field) + " " + getColumnType(field) + " " + getColumnConstraints(field));
     }
 
@@ -93,7 +96,7 @@ public class SQLQueryGenerator {
     public static List<String> getColumnNames(Class<PersistentEntity> domainClass) {
         List<Field> fields = EntityFieldHelper.getColumnFields(domainClass);
         List<String> columns = new ArrayList<String>();
-        columns.add(DatabaseManager.ID_COLUMN_NAME);
+        columns.add(Configuration.ID_COLUMN_NAME);
         for (Field field : fields) {
             if (!EntityFieldHelper.isCollectionRelationField(field)) {
                 columns.add(getColumnName(field));
@@ -134,7 +137,7 @@ public class SQLQueryGenerator {
      * @param field the field of the persistent entity
      * @return the column constraints
      */
-    public static String getColumnConstraints(Field field) {
+    private static String getColumnConstraints(Field field) {
         String result = "";
         if (field.isAnnotationPresent(Constraints.class)) {
             Constraints constraints = field.getAnnotation(Constraints.class);
@@ -145,6 +148,12 @@ public class SQLQueryGenerator {
                 result += " NOT NULL";
             }
         }
+//        if (EntityFieldHelper.isSingleRelationField(field) && !field.isAnnotationPresent(HasOne.class)) {
+//            result += " REFERENCES " + getTableName((Class<PersistentEntity>) field.getType()) + "(" + Configuration.ID_COLUMN_NAME + ")";
+//            if (field.isAnnotationPresent(BelongsTo.class)) {
+//                result += " ON DELETE CASCADE";
+//            }
+//        }
         return result;
     }
 }

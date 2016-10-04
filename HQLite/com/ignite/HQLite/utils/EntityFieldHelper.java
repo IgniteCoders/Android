@@ -1,4 +1,4 @@
-package com.ignite.HQLite.managers;
+package com.ignite.HQLite.utils;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -8,7 +8,6 @@ import com.ignite.HQLite.PersistentEntity;
 import com.ignite.HQLite.annotations.BelongsTo;
 import com.ignite.HQLite.annotations.HasMany;
 import com.ignite.HQLite.annotations.HasOne;
-import com.ignite.HQLite.utils.Reflections;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,6 +27,17 @@ public class EntityFieldHelper {
 
     /******************************************************** Field setter/getter */
     /* setter */
+    public static PersistentEntity setFieldFromValue(PersistentEntity object, Field field, Object value) {
+        try {
+            boolean accessible = field.isAccessible();
+            field.setAccessible(true);
+            field.set(value, object);
+            field.setAccessible(accessible);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return object;
+    }
     public static PersistentEntity setFieldFromJSONObject(PersistentEntity object, Field field, JSONObject _JSONObject) {
         try {
             boolean accessible = field.isAccessible();
