@@ -51,35 +51,29 @@ HQLite needs a little Configuration-over-Figuration to make it work:
     
     
     
-  * Define some setting of the database file:
+  * Define some database file settings:
   
-    Navigate through the HQlite library folders and find the `com.ignite.HQLite.managers.DatabaseManager` class. In this class you need to set two properties:
-    - The database name.
-    - The database version.
+    Now HQLite can be used but lets set some properties. Navigate through the HQlite library folders and find the `com.ignite.HQLite.Configuration` class. Take a look to the properties: 
+    
   ```Java
-	private static final String DATABASE_NAME = "mydatabase.db";
-	private static final int DATABASE_VERSION = 1;
+    /** The name of the database file that will be stored, it's must end with .db extension */
+    public static final String DATABASE_NAME = "mydatabase.db";
+    /** Number of the database version, should be increased on each database modification to recreate the database */
+    public static final int DATABASE_VERSION = 1;
+    /** Define database create/update behavior; one of 'create', 'drop-create', 'update', '', */
+    public static final String DATABASE_CREATE = "drop-create";
   ```
-
-
-
 
   * Define some optional settings:
   
-    Now HQLite can be used but lets stay in the `DatabaseManager` to set some more properties:
-    
-    - The package name where you will place your domain classes.
-    
-    	This is used to enhance the search of your classes, if you set it to `""`, HQLite will search in all the application for every class thats extends `com.ignite.HQLite.PersistentEntity`.
-	
-    - The SQL Console.
-    
-    	Set to true if you want to print the queries in the console.
   ```Java
-	private static final String DOMAIN_PACKAGE = "";
-	public static final boolean SQL_CONSOLE_ENABLED = true;
+    /** Name of the package where the domain classes are placed, if set to "", HQLite will search in all the application */
+    public static final String DOMAIN_PACKAGE = ""; // "com.example.app.domain";
+    /** Set to true if you need to print the SQL queries in the console */
+    public static final boolean SQL_CONSOLE_ENABLED = true; // Constants.DEBUG;
   ```
-
+  The package name is used to enhance the search of your classes, if you set it to `""`, HQLite will search in all the application for every class thats extends `com.ignite.HQLite.PersistentEntity`.
+	This functionality doesn't work with instant run after gradle plugin 2.0.0!
 
 
 ## Usage
@@ -94,14 +88,14 @@ When building Android applications you have to consider the problem domain you a
 These are modeled in HQLite classes, so a `Book` class may have a title, a release date, an ISBN number and so on. The next few sections show how to model the domain in HQLite.
 
 ### 2.1 Creating a domain class
-To create a domain class you need to extends `com.ignite.HQLite.PersistentEntity` and declare a static field `TABLE` with its `com.ignite.HQLite.managers.EntityManager` as follows:
+To create a domain class you need to extends `com.ignite.HQLite.PersistentEntity` and declare a static field `TABLE` with its `com.ignite.HQLite.EntityManager` as follows:
 
   ```Java
 	public class Book extends PersistentEntity {
 		public static final EntityManager<Book> TABLE = new EntityManager<Book>(){};
 	}
   ```
-This class will map automatically to a table in the database called book (the same name as the class).
+This class will map automatically to a table in the database called `Book` (the same name as the class).
 
 ### 2.2 Defining properties
 Now that you have a domain class you can define its properties as Java types. For example:
@@ -347,6 +341,7 @@ p.insert();
 HQLite transparently adds an implicit id property to your domain class which you can use for retrieval:
 ```Java
 Person p = Person.TABLE.get(1);
+List<Person> pl = Person.TABLE.getAll();
 ```
 
 **Update**
