@@ -1,14 +1,12 @@
 package com.ignite.HQLite;
 
-import com.ignite.networker.utils.Constants;
-
 /**
  * Created by Mansour on 30/09/2016.
  */
 
 public class Configuration {
     /** Set to true if you need to print the SQL queries in the console */
-    public static final boolean SQL_CONSOLE_ENABLED = true;
+    public static final boolean SQL_CONSOLE_ENABLED = true; // Constants.DEBUG;
     /** Defines the name of the identifier column in all tables */
     public static final String ID_COLUMN_NAME = "_id";
     /** The name of the database file that will be stored, it's must end with .db extension */
