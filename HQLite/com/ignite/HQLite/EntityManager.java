@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 
 import com.ignite.HQLite.utils.ApplicationContextProvider;
+import com.ignite.HQLite.utils.CriteriaBuilder;
 import com.ignite.HQLite.utils.EntityFieldHelper;
 import com.ignite.HQLite.utils.Reflections;
 import com.ignite.HQLite.utils.SQLConsole;
@@ -392,10 +393,12 @@ public abstract class EntityManager<E extends PersistentEntity> {
 		return listObjects;
 	}
 
-    public List<E> getWithCriteria() {
+    public List<E> getAllWithCriteria(CriteriaBuilder criteria) {
         List<E> listObjects = new ArrayList<E>();
         open();
-        Cursor cursor = database.query(getTableName(), getColumnNames(), null, null, null, null, null);
+        String sqlQry = SQLiteQueryBuilder.buildQueryString(false, getTableName(), getColumnNames(), criteria.query(), null, null, null, null);
+        SQLConsole.Log(sqlQry);
+        Cursor cursor = database.query(getTableName(), getColumnNames(), criteria.query(), null, null, null, null);
         try {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 E object = cursorToEntity(cursor);
@@ -408,5 +411,14 @@ public abstract class EntityManager<E extends PersistentEntity> {
             close();
         }
         return listObjects;
+    }
+
+    public E getWithCriteria(CriteriaBuilder criteria) {
+        List<E> listObjects = getAllWithCriteria(criteria);
+        if (listObjects.size() > 0) {
+            return listObjects.get(0);
+        } else {
+            return null;
+        }
     }
 }

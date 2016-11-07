@@ -2,9 +2,7 @@ package com.ignite.HQLite.utils;
 
 import com.ignite.HQLite.Configuration;
 import com.ignite.HQLite.PersistentEntity;
-import com.ignite.HQLite.annotations.BelongsTo;
 import com.ignite.HQLite.annotations.Constraints;
-import com.ignite.HQLite.annotations.HasOne;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -31,7 +29,7 @@ public class SQLQueryGenerator {
      */
     public static String getCreateTable(Class<PersistentEntity> domainClass) {
         List<Field> fields = EntityFieldHelper.getColumnFields(domainClass);
-        String sqlCreate = "CREATE TABLE IF NOT EXISTS " + getTableName(domainClass) + " (_id INTEGER PRIMARY KEY AUTOINCREMENT";
+        String sqlCreate = "CREATE TABLE IF NOT EXISTS " + getTableName(domainClass) + " (" + Configuration.ID_COLUMN_NAME + " INTEGER PRIMARY KEY AUTOINCREMENT";
         for (int i = 0; i < fields.size(); i ++) {
             Field field = fields.get(i);
             if (!EntityFieldHelper.isCollectionRelationField(field)) {

@@ -205,7 +205,7 @@ public class EntityFieldHelper {
                 } else if (field.getType() == boolean.class) {
                     _JSONObject.put(field.getName(), (Boolean) value);
                 } else if (field.getType() == byte[].class) {
-                    _JSONObject.put(field.getName(), Base64.encodeToString((byte[]) value, Base64.NO_WRAP));
+                    _JSONObject.put(field.getName(), value != null ? Base64.encodeToString((byte[]) value, Base64.NO_WRAP) : null);
                 }
             }
 
@@ -265,8 +265,18 @@ public class EntityFieldHelper {
     /* Return fields that are handled as columns in table*/
     public static List<Field> getColumnFields(Class<PersistentEntity> domainClass) {
         List<Field> fields = new ArrayList<Field>();
+//        for (Field field : domainClass.getDeclaredFields()) {
+//            if (isColumn(field)) {
+//                fields.add(field);
+//            }
+//        }
         for (Field field : domainClass.getDeclaredFields()) {
-            if (isColumn(field)) {
+            if (isPrimitiveField(field)) {
+                fields.add(field);
+            }
+        }
+        for (Field field : domainClass.getDeclaredFields()) {
+            if (isRelationField(field)) {
                 fields.add(field);
             }
         }
