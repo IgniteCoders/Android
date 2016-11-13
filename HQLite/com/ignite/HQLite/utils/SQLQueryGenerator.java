@@ -112,15 +112,15 @@ public class SQLQueryGenerator {
         String result = "";
         if (field.getType() == String.class) {
             result += "TEXT";
-        } else if (field.getType() == long.class) {
+        } else if (field.getType() == long.class || field.getType() == Long.class) {
             result += "LONG";
-        } else if (field.getType() == double.class) {
+        } else if (field.getType() == double.class || field.getType() == Double.class) {
             result += "DOUBLE";
-        } else if (field.getType() == int.class) {
+        } else if (field.getType() == int.class || field.getType() == Integer.class) {
             result += "INTEGER";
-        } else if (field.getType() == boolean.class) {
+        } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
             result += "BOOLEAN";
-        } else if (field.getType() == byte[].class) {
+        } else if (field.getType() == byte[].class || field.getType() == Byte[].class) {
             result += "BLOB";
         } else if (EntityFieldHelper.isRelationField(field)) {
             if (EntityFieldHelper.isSingleRelationField(field)) {

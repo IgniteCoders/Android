@@ -1,12 +1,6 @@
 package com.ignite.utils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.SocketException;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.util.ArrayList;
+import android.util.Log;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -20,7 +14,13 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 
-import android.util.Log;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.SocketException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 
 /**
  * Client used to interact with the network context by HTTP requests.
@@ -38,13 +38,13 @@ public class CustomHttpClient {
     }
 
     /** Set to true if you need to print the URLs calls and responses in the console. */
-    private static final boolean HTTP_CONSOLE_ENABLED           = true;
+    private static final boolean HTTP_CONSOLE_ENABLED           = true;//Constants.DEBUG;
     /** Set the default request type. If you dont specify in the call, this will be used. */
     private static final HttpMethod DEFAULT_CONNECTION_METHOD   = HttpMethod.GET;
     /** Define the time in milliseconds to cancel calls if server is not responding */
     private static final int CONNECTION_TIMEOUT                 = 10000;
     /** Provide a list of possible responses to validate them; Set to null if you dont want to check */
-    private static final String[] VALID_RESPONSES               = null; // Example: {"true", "false"}; 
+    private static final String[] VALID_RESPONSES               = {"true", "false", "0", "1", "2"};
     /** If your app will download JSONs, you can set a prefix to validate them. */
     public static final String JSON_PREFIX                      = "JSONResponse";
 
@@ -92,6 +92,9 @@ public class CustomHttpClient {
     public synchronized static String execute(String url, ArrayList<NameValuePair> params, HttpMethod method) throws Exception {
         BufferedReader in = null;
         try{
+            if (HTTP_CONSOLE_ENABLED) {
+                Log.i("HTTP", url);
+            }
             HttpClient client = getHttpClient();
             HttpResponse response = null;
             if (method == HttpMethod.GET) {
@@ -119,7 +122,6 @@ public class CustomHttpClient {
             String result = sb.toString();
 
             if (HTTP_CONSOLE_ENABLED) {
-                Log.i("HTTP", url);
                 Log.i("HTTP", result);
             }
             if (result != null && result.length() > 0 && isValidHttpResponse(result)) {
@@ -182,7 +184,7 @@ public class CustomHttpClient {
                 if (replacedResponse.equalsIgnoreCase(validResponse)) return true;
             }
 
-            if (replacedResponse.substring(0, JSON_PREFIX.length()).equalsIgnoreCase(JSON_PREFIX)) return true;
+            if (replacedResponse.length() > JSON_PREFIX.length() && replacedResponse.substring(0, JSON_PREFIX.length()).equalsIgnoreCase(JSON_PREFIX)) return true;
 
             return false;
         } else {

@@ -12,13 +12,13 @@ public class CriteriaBuilder {
         return whereQuery;
     }
 
-    public CriteriaBuilder isNull (String key, Object value) {
-        whereQuery += " " + key + " IS NULL '" + value.toString() + "'";
+    public CriteriaBuilder isNull (String key) {
+        whereQuery += " " + key + " IS NULL";
         return this;
     }
 
-    public CriteriaBuilder isNotNull (String key, Object value) {
-        whereQuery += " " + key + " IS NOT NULL '" + value.toString() + "'";
+    public CriteriaBuilder isNotNull (String key) {
+        whereQuery += " " + key + " IS NOT NULL";
         return this;
     }
 

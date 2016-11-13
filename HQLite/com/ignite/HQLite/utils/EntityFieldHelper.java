@@ -76,15 +76,16 @@ public class EntityFieldHelper {
             } else {
                 if (field.getType() == String.class) {
                     value = _JSONObject.getString(columnName);
-                } else if (field.getType() == long.class) {
+                    value = value.equals("null") ? null : value;
+                } else if (field.getType() == long.class || field.getType() == Long.class) {
                     value = _JSONObject.getLong(columnName);
-                } else if (field.getType() == double.class) {
+                } else if (field.getType() == double.class || field.getType() == Double.class) {
                     value = _JSONObject.getDouble(columnName);
-                } else if (field.getType() == int.class) {
+                } else if (field.getType() == int.class || field.getType() == Integer.class) {
                     value = _JSONObject.getInt(columnName);
-                } else if (field.getType() == boolean.class) {
+                } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
                     value = _JSONObject.getInt(columnName) != 0;
-                } else if (field.getType() == byte[].class) {
+                } else if (field.getType() == byte[].class || field.getType() == Byte[].class) {
                     try {
                         String base64Value = _JSONObject.getString(columnName);
                         if (base64Value != null && !base64Value.equals("")) {
@@ -147,15 +148,15 @@ public class EntityFieldHelper {
                 int columnIndex = cursor.getColumnIndex(columnName);
                 if (field.getType() == String.class) {
                     value = cursor.getString(columnIndex);
-                } else if (field.getType() == long.class) {
+                } else if (field.getType() == long.class || field.getType() == Long.class) {
                     value = cursor.getLong(columnIndex);
-                } else if (field.getType() == double.class) {
+                } else if (field.getType() == double.class || field.getType() == Double.class) {
                     value = cursor.getDouble(columnIndex);
-                } else if (field.getType() == int.class) {
+                } else if (field.getType() == int.class || field.getType() == Integer.class) {
                     value = cursor.getInt(columnIndex);
-                } else if (field.getType() == boolean.class) {
+                } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
                     value = cursor.getInt(columnIndex) != 0;
-                } else if (field.getType() == byte[].class) {
+                } else if (field.getType() == byte[].class || field.getType() == Byte[].class) {
                     value = cursor.getBlob(columnIndex);
                 }
             }
@@ -196,15 +197,15 @@ public class EntityFieldHelper {
             } else {
                 if (field.getType() == String.class) {
                     _JSONObject.put(field.getName(), (String) value);
-                } else if (field.getType() == long.class) {
+                } else if (field.getType() == long.class || field.getType() == Long.class) {
                     _JSONObject.put(field.getName(), (Long) value);
-                } else if (field.getType() == double.class) {
+                } else if (field.getType() == double.class || field.getType() == Double.class) {
                     _JSONObject.put(field.getName(), (Double) value);
-                } else if (field.getType() == int.class) {
+                } else if (field.getType() == int.class || field.getType() == Integer.class) {
                     _JSONObject.put(field.getName(), (Integer) value);
-                } else if (field.getType() == boolean.class) {
+                } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
                     _JSONObject.put(field.getName(), (Boolean) value);
-                } else if (field.getType() == byte[].class) {
+                } else if (field.getType() == byte[].class || field.getType() == Byte[].class) {
                     _JSONObject.put(field.getName(), value != null ? Base64.encodeToString((byte[]) value, Base64.NO_WRAP) : null);
                 }
             }
@@ -240,15 +241,15 @@ public class EntityFieldHelper {
             } else {
                 if (field.getType() == String.class) {
                     values.put(field.getName(), (String) value);
-                } else if (field.getType() == long.class) {
+                } else if (field.getType() == long.class || field.getType() == Long.class) {
                     values.put(field.getName(), (Long) value);
-                } else if (field.getType() == double.class) {
+                } else if (field.getType() == double.class || field.getType() == Double.class) {
                     values.put(field.getName(), (Double) value);
-                } else if (field.getType() == int.class) {
+                } else if (field.getType() == int.class || field.getType() == Integer.class) {
                     values.put(field.getName(), (Integer) value);
-                } else if (field.getType() == boolean.class) {
+                } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
                     values.put(field.getName(), (Boolean) value);
-                } else if (field.getType() == byte[].class) {
+                } else if (field.getType() == byte[].class || field.getType() == Byte[].class) {
                     values.put(field.getName(), (byte[]) value);
                 }
             }
@@ -302,7 +303,7 @@ public class EntityFieldHelper {
     /* Return true if field is handled as primitive column in table*/
     public static boolean isPrimitiveField(Field field) {
         Class type = field.getType();
-        if (type == String.class || type == long.class || type == double.class || type == int.class || type == boolean.class || type == byte[].class) {
+        if (type == String.class || type == long.class || type == Long.class || type == double.class || type == Double.class || type == int.class || type == Integer.class || type == boolean.class || type == Boolean.class || type == byte[].class || type == Byte[].class) {
             return true;
         } else {
             return false;
