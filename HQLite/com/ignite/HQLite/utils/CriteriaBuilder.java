@@ -63,6 +63,18 @@ public class CriteriaBuilder {
     }
 
     public CriteriaBuilder inList (String key, Object[] values) {
+        String inClause = generateInClause(values);
+        whereQuery += " " + key + " IN " + inClause;
+        return this;
+    }
+
+    public CriteriaBuilder notInList (String key, Object[] values) {
+        String inClause = generateInClause(values);
+        whereQuery += " " + key + " NOT IN " + inClause;
+        return this;
+    }
+
+    private String generateInClause (Object[] values) {
         String inClause = "(";
         for(int i = 0; i < values.length; i++){
             inClause += "'" + values[i].toString() + "'";
@@ -71,8 +83,7 @@ public class CriteriaBuilder {
             }
         }
         inClause += ")";
-        whereQuery += " " + key + " IN " + inClause;
-        return this;
+        return inClause;
     }
 
     public CriteriaBuilder and () {

@@ -1,5 +1,7 @@
 package com.ignite.HQLite.annotations;
 
+import com.ignite.HQLite.Configuration;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -18,4 +20,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface HasOne {
     String mappedBy();
+    boolean lazy() default Configuration.LAZY_FETCH_TYPE;
 }

@@ -156,10 +156,10 @@ public abstract class PersistentEntity {
     }
 	
 	public boolean save() {
-		if (this.getTableData().get(id) == null) {
-			return insert();
+		if (id != null && this.getTableData().get(id) != null) {
+            return update();
 		} else {
-			return update();
+            return insert();
 		}
 	}
 

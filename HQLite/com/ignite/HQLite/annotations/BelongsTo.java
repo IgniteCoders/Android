@@ -1,5 +1,7 @@
 package com.ignite.HQLite.annotations;
 
+import com.ignite.HQLite.Configuration;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -17,7 +19,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface BelongsTo {
-    //Class targetEntity() default void.class;
+    //Class targetEntity() default Void.class;
 
     /** The field name that owns the relationship. */
     String mappedBy();

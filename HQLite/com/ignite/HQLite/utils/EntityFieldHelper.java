@@ -14,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -130,6 +131,9 @@ public class EntityFieldHelper {
                     if (field.isAnnotationPresent(BelongsTo.class)) {
                         relationObject.setServerId(relationId);
                         value = relationObject;
+                    } else if (field.isAnnotationPresent(HasOne.class) && field.getAnnotation(HasOne.class).lazy()) {
+                        relationObject.setServerId(relationId);
+                        value = relationObject;
                     } else {
                         value = relationObject.getTableData().getByServerId(relationId);
                     }
@@ -139,9 +143,15 @@ public class EntityFieldHelper {
                     if (field.isAnnotationPresent(HasMany.class)) {
                         HasMany hasMany = field.getAnnotation(HasMany.class);
                         String mappedBy = hasMany.mappedBy();
-                        value = relationObject.getTableData().getAllByField("id" + mappedBy.substring(0, 1).toUpperCase() + mappedBy.substring(1), object.getServerId());
+                        boolean lazy = hasMany.lazy();
+                        if (lazy == false) {
+                            value = relationObject.getTableData().getAllByField("id" + mappedBy.substring(0, 1).toUpperCase() + mappedBy.substring(1), object.getServerId());
+                        } else {
+                            value = new ArrayList<>();
+                        }
                     } else {
                         value = new ArrayList<>(); //TODO: Esta lista es de uso y no se maneja aun (hay que crear una tabla auxiliar)
+                        throw new UnsupportedOperationException("Use relationships not supported in lists, you must create an auxiliar table");
                     }
                 }
             } else {
@@ -233,7 +243,11 @@ public class EntityFieldHelper {
                 if (EntityFieldHelper.isSingleRelationField(field)) {
                     PersistentEntity relationObject = (PersistentEntity) value;
                     if (field.isAnnotationPresent(BelongsTo.class) || !field.isAnnotationPresent(HasOne.class)) {
-                        values.put(SQLQueryGenerator.getColumnName(field), relationObject.getServerId());
+                        if (relationObject != null) {
+                            values.put(SQLQueryGenerator.getColumnName(field), relationObject.getServerId());
+                        } else {
+                            values.put(SQLQueryGenerator.getColumnName(field), (String) null);
+                        }
                     }
                 } else {
 
@@ -303,6 +317,9 @@ public class EntityFieldHelper {
     /* Return true if field is handled as primitive column in table*/
     public static boolean isPrimitiveField(Field field) {
         Class type = field.getType();
+        if (Modifier.isStatic(field.getModifiers())) {
+            return false;
+        }
         if (type == String.class || type == long.class || type == Long.class || type == double.class || type == Double.class || type == int.class || type == Integer.class || type == boolean.class || type == Boolean.class || type == byte[].class || type == Byte[].class) {
             return true;
         } else {

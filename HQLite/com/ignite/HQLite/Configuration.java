@@ -19,4 +19,6 @@ public class Configuration {
     public static final String ACCESS_PROPERTY = "TABLE";
     /** Define database create/update behavior; one of 'create', 'drop-create', 'update', '', */
     public static final String DATABASE_CREATE = "drop-create";
+    /** Set the default fetch behaviour, true for "LAZY" and false for "EAGER" */
+    public static final boolean LAZY_FETCH_TYPE = false;
 }
