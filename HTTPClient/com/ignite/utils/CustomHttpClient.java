@@ -44,7 +44,7 @@ public class CustomHttpClient {
     /** Define the time in milliseconds to cancel calls if server is not responding */
     private static final int CONNECTION_TIMEOUT                 = 10000;
     /** Provide a list of possible responses to validate them; Set to null if you dont want to check */
-    private static final String[] VALID_RESPONSES               = {"true", "false", "0", "1", "2"};
+    private static final String[] VALID_RESPONSES               = false;//{"true", "false", "0", "1", "2"};
     /** If your app will download JSONs, you can set a prefix to validate them. */
     public static final String JSON_PREFIX                      = "JSONResponse";
 
