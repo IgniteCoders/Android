@@ -82,7 +82,8 @@ public abstract class PersistentEntity {
                 if (childs != null) {
                     for (PersistentEntity child : childs) {
                         Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
-                        EntityFieldHelper.setFieldFromValue(this, childField, child);
+//                        EntityFieldHelper.setFieldFromValue(this, childField, child);
+                        EntityFieldHelper.setFieldFromValue(child, childField, this);
                         child.insert();
                     }
                 }
@@ -145,7 +146,8 @@ public abstract class PersistentEntity {
                 if (childs != null) {
                     for (PersistentEntity child : childs) {
                         Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
-                        EntityFieldHelper.setFieldFromValue(this, childField, child);
+//                        EntityFieldHelper.setFieldFromValue(this, childField, child);
+                        EntityFieldHelper.setFieldFromValue(child, childField, this);
                         child.insert();
                     }
                 }
@@ -181,7 +183,8 @@ public abstract class PersistentEntity {
                 if (childs != null) {
                     for (PersistentEntity child : childs) {
                         Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
-                        EntityFieldHelper.setFieldFromValue(this, childField, child);
+//                        EntityFieldHelper.setFieldFromValue(this, childField, child);
+                        EntityFieldHelper.setFieldFromValue(child, childField, this);
                         if(child.delete() == false) {
                             return false;
                         }

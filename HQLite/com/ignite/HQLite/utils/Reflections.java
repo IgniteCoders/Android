@@ -2,6 +2,8 @@ package com.ignite.HQLite.utils;
 
 import android.content.Context;
 
+import com.ignite.HQLite.PersistentEntity;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -64,8 +66,12 @@ public class Reflections {
 
     public static Object getSuperInstanceFromInstance(Object object) throws IllegalAccessException, InstantiationException {
         Class superClass = object.getClass().getSuperclass();
+        /*if (superClass != PersistentEntity.class) {
+        if (superClass.getSuperclass() != PersistentEntity.class) {
+
+        }*/
         Object superObject = superClass.newInstance();
-        for (Field field : superClass.getDeclaredFields()){
+        for (Field field : getDeclaredFieldsRecursively(superClass, PersistentEntity.class)/*superClass.getDeclaredFields()*/){
             superObject = fillFieldFromObjectToObject(field, object, superObject);
         }
         return superObject;

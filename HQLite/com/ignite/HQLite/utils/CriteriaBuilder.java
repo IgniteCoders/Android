@@ -7,9 +7,34 @@ package com.ignite.HQLite.utils;
 public class CriteriaBuilder {
 
     private String whereQuery = "";
+    private String groupBy = null;
+    private String having = null;
+    private String orederBy = null;
 
     public String query() {
         return whereQuery;
+    }
+    public String groupBy() {
+        return groupBy;
+    }
+    public String having() {
+        return having;
+    }
+    public String orederBy() {
+        return orederBy;
+    }
+
+    public CriteriaBuilder groupBy(String groupBy) {
+        this.groupBy = groupBy;
+        return this;
+    }
+    public CriteriaBuilder having(String having) {
+        this.having = having;
+        return this;
+    }
+    public CriteriaBuilder orederBy(String orederBy) {
+        this.orederBy = orederBy;
+        return this;
     }
 
     public CriteriaBuilder isNull (String key) {

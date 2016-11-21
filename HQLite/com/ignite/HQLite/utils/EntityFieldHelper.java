@@ -32,7 +32,7 @@ public class EntityFieldHelper {
         try {
             boolean accessible = field.isAccessible();
             field.setAccessible(true);
-            field.set(value, object);
+            field.set(object, value);
             field.setAccessible(accessible);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
@@ -75,36 +75,42 @@ public class EntityFieldHelper {
                     }
                 }
             } else {
-                if (field.getType() == String.class) {
-                    value = _JSONObject.getString(columnName);
-                    value = value.equals("null") ? null : value;
-                } else if (field.getType() == long.class || field.getType() == Long.class) {
-                    value = _JSONObject.getLong(columnName);
-                } else if (field.getType() == double.class || field.getType() == Double.class) {
-                    value = _JSONObject.getDouble(columnName);
-                } else if (field.getType() == int.class || field.getType() == Integer.class) {
-                    value = _JSONObject.getInt(columnName);
-                } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-                    value = _JSONObject.getInt(columnName) != 0;
-                } else if (field.getType() == byte[].class || field.getType() == Byte[].class) {
-                    try {
-                        String base64Value = _JSONObject.getString(columnName);
-                        if (base64Value != null && !base64Value.equals("")) {
-                            value = Base64.decode(base64Value, Base64.DEFAULT);
+                try {
+                    if (field.getType() == String.class) {
+                        value = _JSONObject.getString(columnName);
+                        value = value.equals("null") ? null : value;
+                    } else if (field.getType() == long.class || field.getType() == Long.class) {
+                        value = _JSONObject.getLong(columnName);
+                    } else if (field.getType() == double.class || field.getType() == Double.class) {
+                        value = _JSONObject.getDouble(columnName);
+                    } else if (field.getType() == int.class || field.getType() == Integer.class) {
+                        value = _JSONObject.getInt(columnName);
+                    } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                        value = _JSONObject.getBoolean(columnName);
+                    } else if (field.getType() == byte[].class || field.getType() == Byte[].class) {
+                        try {
+                            String base64Value = _JSONObject.getString(columnName);
+                            if (base64Value != null && !base64Value.equals("")) {
+                                value = Base64.decode(base64Value, Base64.DEFAULT);
+                            }
+                        } catch (JSONException e) {
+                            //e.printStackTrace();
+                        } catch (IllegalArgumentException e) {
+                            //e.printStackTrace();
                         }
-                    } catch (JSONException e) {
-                        //e.printStackTrace();
-                    } catch (IllegalArgumentException e) {
-                        //e.printStackTrace();
                     }
+                } catch (JSONException e) {
+                    //e.printStackTrace();
                 }
             }
-            field.set(object, value);
+            if (value != null) {
+                field.set(object, value);
+            }
 
             field.setAccessible(accessible);
-        } catch (JSONException e) {
+        }/* catch (JSONException e) {
             e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        }*/ catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

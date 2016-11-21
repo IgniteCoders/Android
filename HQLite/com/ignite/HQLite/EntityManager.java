@@ -215,6 +215,15 @@ public abstract class EntityManager<E extends PersistentEntity> {
     public JSONObject wrap(E object) {
         JSONObject _JSONObject = new JSONObject();
         try {
+            Class superClass = domainClass.getSuperclass();
+            PersistentEntity superObject = null;
+            if (superClass != PersistentEntity.class) {
+                try {
+                    _JSONObject = ((PersistentEntity) superClass.newInstance()).getTableData().wrap(object);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             for (Field field : getColumnFields()) {
                 _JSONObject = EntityFieldHelper.setFieldInJSONObject(object, field, _JSONObject);
             }
@@ -318,7 +327,11 @@ public abstract class EntityManager<E extends PersistentEntity> {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            cursor.close();
+            try {
+                cursor.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             close();
         }
         return object;
@@ -338,7 +351,11 @@ public abstract class EntityManager<E extends PersistentEntity> {
 		} catch (Exception e) {
             e.printStackTrace();
         } finally {
-			cursor.close();
+            try {
+                cursor.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             close();
 		}
 		return listObjects;
@@ -358,7 +375,11 @@ public abstract class EntityManager<E extends PersistentEntity> {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            cursor.close();
+            try {
+                cursor.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             close();
         }
 		return listObjects;
@@ -387,7 +408,11 @@ public abstract class EntityManager<E extends PersistentEntity> {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            cursor.close();
+            try {
+                cursor.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             close();
         }
 		return listObjects;
@@ -396,9 +421,9 @@ public abstract class EntityManager<E extends PersistentEntity> {
     public List<E> getAllWithCriteria(CriteriaBuilder criteria) {
         List<E> listObjects = new ArrayList<E>();
         open();
-        String sqlQry = SQLiteQueryBuilder.buildQueryString(false, getTableName(), getColumnNames(), criteria.query(), null, null, null, null);
+        String sqlQry = SQLiteQueryBuilder.buildQueryString(false, getTableName(), getColumnNames(), criteria.query(), criteria.groupBy(), criteria.having(), criteria.orederBy(), null);
         SQLConsole.Log(sqlQry);
-        Cursor cursor = database.query(getTableName(), getColumnNames(), criteria.query(), null, null, null, null);
+        Cursor cursor = database.query(getTableName(), getColumnNames(), criteria.query(), null, criteria.groupBy(), criteria.having(), criteria.orederBy());
         try {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 E object = cursorToEntity(cursor);
@@ -407,7 +432,11 @@ public abstract class EntityManager<E extends PersistentEntity> {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            cursor.close();
+            try {
+                cursor.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             close();
         }
         return listObjects;
