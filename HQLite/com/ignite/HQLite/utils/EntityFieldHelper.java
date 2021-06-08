@@ -78,7 +78,7 @@ public class EntityFieldHelper {
                 try {
                     if (field.getType() == String.class) {
                         value = _JSONObject.getString(columnName);
-                        value = value.equals("null") ? null : value;
+                        value = ((String)value).toLowerCase().equals("null") ? null : value;
                     } else if (field.getType() == long.class || field.getType() == Long.class) {
                         value = _JSONObject.getLong(columnName);
                     } else if (field.getType() == double.class || field.getType() == Double.class) {
@@ -130,18 +130,20 @@ public class EntityFieldHelper {
             if (EntityFieldHelper.isRelationField(field)) {
                 Class relationClass = field.getType();
                 if (EntityFieldHelper.isSingleRelationField(field)) {
-                    int columnIndex = cursor.getColumnIndex(columnName);
-                    Long relationId = cursor.getLong(columnIndex);
-                    PersistentEntity relationObject = (PersistentEntity)relationClass.newInstance();
-//                  TODO: mappedBy se puede usar aqui
-                    if (field.isAnnotationPresent(BelongsTo.class)) {
-                        relationObject.setServerId(relationId);
-                        value = relationObject;
-                    } else if (field.isAnnotationPresent(HasOne.class) && field.getAnnotation(HasOne.class).lazy()) {
-                        relationObject.setServerId(relationId);
-                        value = relationObject;
+                    PersistentEntity relationObject = (PersistentEntity) relationClass.newInstance();
+                    if (field.isAnnotationPresent(HasOne.class)) {
+                        HasOne hasOne = field.getAnnotation(HasOne.class);
+                        String mappedBy = hasOne.mappedBy();
+                        value = relationObject.getTableData().getByField("id" + mappedBy.substring(0, 1).toUpperCase() + mappedBy.substring(1), object.getServerId());
                     } else {
-                        value = relationObject.getTableData().getByServerId(relationId);
+                        int columnIndex = cursor.getColumnIndex(columnName);
+                        Long relationId = cursor.getLong(columnIndex);
+                        if (field.isAnnotationPresent(BelongsTo.class)) {
+                            relationObject.setServerId(relationId);
+                            value = relationObject;
+                        } else {
+                            value = relationObject.getTableData().getByServerId(relationId);
+                        }
                     }
                 } else {
                     Type type = ((ParameterizedType)field.getGenericType()).getActualTypeArguments()[0];
@@ -157,12 +159,14 @@ public class EntityFieldHelper {
                         }
                     } else {
                         value = new ArrayList<>(); //TODO: Esta lista es de uso y no se maneja aun (hay que crear una tabla auxiliar)
-                        throw new UnsupportedOperationException("Use relationships not supported in lists, you must create an auxiliar table");
+                        throw new UnsupportedOperationException("Use Many-To-Many relationships not supported, you must create an auxiliar table");
                     }
                 }
             } else {
                 int columnIndex = cursor.getColumnIndex(columnName);
-                if (field.getType() == String.class) {
+                if (cursor.getType(columnIndex) == Cursor.FIELD_TYPE_NULL) {
+                    value = null;
+                } else if (field.getType() == String.class) {
                     value = cursor.getString(columnIndex);
                 } else if (field.getType() == long.class || field.getType() == Long.class) {
                     value = cursor.getLong(columnIndex);
@@ -235,6 +239,8 @@ public class EntityFieldHelper {
             e.printStackTrace();
         } catch (InstantiationException e) {
             e.printStackTrace();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
         }
         return _JSONObject;
     }
@@ -259,7 +265,15 @@ public class EntityFieldHelper {
 
                 }
             } else {
-                if (field.getType() == String.class) {
+                try {
+                    value = ((String)value).toLowerCase().equals("null") ? null : value;
+                } catch (Exception e) {
+
+                }
+
+                if (value == null) {
+                    values.putNull(field.getName());
+                } else if (field.getType() == String.class) {
                     values.put(field.getName(), (String) value);
                 } else if (field.getType() == long.class || field.getType() == Long.class) {
                     values.put(field.getName(), (Long) value);
@@ -268,7 +282,7 @@ public class EntityFieldHelper {
                 } else if (field.getType() == int.class || field.getType() == Integer.class) {
                     values.put(field.getName(), (Integer) value);
                 } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-                    values.put(field.getName(), (Boolean) value);
+                    values.put(field.getName(), ((Boolean) value) ? 1 : 0);
                 } else if (field.getType() == byte[].class || field.getType() == Byte[].class) {
                     values.put(field.getName(), (byte[]) value);
                 }

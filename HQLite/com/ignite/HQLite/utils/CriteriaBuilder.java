@@ -9,7 +9,10 @@ public class CriteriaBuilder {
     private String whereQuery = "";
     private String groupBy = null;
     private String having = null;
-    private String orederBy = null;
+    private String orderBy = null;
+    private String join = "";
+    private boolean distinct = false;
+    private String limit = "";
 
     public String query() {
         return whereQuery;
@@ -20,8 +23,17 @@ public class CriteriaBuilder {
     public String having() {
         return having;
     }
-    public String orederBy() {
-        return orederBy;
+    public String orderBy() {
+        return orderBy;
+    }
+    public String join() {
+        return join;
+    }
+    public boolean distinct() {
+        return distinct;
+    }
+    public String limit() {
+        return limit;
     }
 
     public CriteriaBuilder groupBy(String groupBy) {
@@ -32,8 +44,24 @@ public class CriteriaBuilder {
         this.having = having;
         return this;
     }
-    public CriteriaBuilder orederBy(String orederBy) {
-        this.orederBy = orederBy;
+    public CriteriaBuilder orderBy(String orderBy) {
+        this.orderBy = orderBy;
+        return this;
+    }
+    public CriteriaBuilder join(String table, String on) {
+        this.join += " INNER JOIN " + table + " ON " + on;
+        return this;
+    }
+    public CriteriaBuilder selectDistinct() {
+        this.distinct = true;
+        return this;
+    }
+    public CriteriaBuilder limit(int limit) {
+        this.limit = limit + "";
+        return this;
+    }
+    public CriteriaBuilder limit(int skip, int limit) {
+        this.limit = skip + ", " + limit;
         return this;
     }
 
@@ -44,6 +72,16 @@ public class CriteriaBuilder {
 
     public CriteriaBuilder isNotNull (String key) {
         whereQuery += " " + key + " IS NOT NULL";
+        return this;
+    }
+
+    public CriteriaBuilder isTrue (String key) {
+        whereQuery += " " + key + " = '1'";
+        return this;
+    }
+
+    public CriteriaBuilder isFalse (String key) {
+        whereQuery += " " + key + " = '0'";
         return this;
     }
 
@@ -90,6 +128,11 @@ public class CriteriaBuilder {
     public CriteriaBuilder inList (String key, Object[] values) {
         String inClause = generateInClause(values);
         whereQuery += " " + key + " IN " + inClause;
+        return this;
+    }
+
+    public CriteriaBuilder inSelect (String key, String query) {
+        whereQuery += " " + key + " IN (" + query + ")";
         return this;
     }
 

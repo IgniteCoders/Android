@@ -15,7 +15,7 @@ public class ApplicationContextProvider extends Application {
         super.onCreate();
  
         sContext = getApplicationContext();
- 
+
     }
  
     /**

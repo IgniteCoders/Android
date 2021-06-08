@@ -29,7 +29,7 @@ public abstract class PersistentEntity {
 		
 	}
 
-    private boolean beforeInsert() {
+    public boolean beforeInsert() {
         Class superClass = getTableData().getDomainClass().getSuperclass();
         if (superClass != PersistentEntity.class) {
             try {
@@ -64,7 +64,7 @@ public abstract class PersistentEntity {
         }
 	}
 
-    private void afterInsert() {
+    public void afterInsert() {
         List<Field> fields = EntityFieldHelper.getRelationFields(getTableData().getDomainClass());
         for (Field field : fields) {
             try {
@@ -81,10 +81,12 @@ public abstract class PersistentEntity {
                 }
                 if (childs != null) {
                     for (PersistentEntity child : childs) {
-                        Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
-//                        EntityFieldHelper.setFieldFromValue(this, childField, child);
-                        EntityFieldHelper.setFieldFromValue(child, childField, this);
-                        child.insert();
+                        if (child != null) {
+                            Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
+                            //                        EntityFieldHelper.setFieldFromValue(this, childField, child);
+                            EntityFieldHelper.setFieldFromValue(child, childField, this);
+                            child.insert();
+                        }
                     }
                 }
             } catch (IllegalAccessException e) {
@@ -93,7 +95,7 @@ public abstract class PersistentEntity {
         }
     }
 
-    private boolean beforeUpdate() {
+    public boolean beforeUpdate() {
         Class superClass = getTableData().getDomainClass().getSuperclass();
         if (superClass != PersistentEntity.class) {
             try {
@@ -128,7 +130,7 @@ public abstract class PersistentEntity {
         }
 	}
 
-    private void afterUpdate() {
+    public void afterUpdate() {
         List<Field> fields = EntityFieldHelper.getRelationFields(getTableData().getDomainClass());
         for (Field field : fields) {
             try {
@@ -145,10 +147,12 @@ public abstract class PersistentEntity {
                 }
                 if (childs != null) {
                     for (PersistentEntity child : childs) {
-                        Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
-//                        EntityFieldHelper.setFieldFromValue(this, childField, child);
-                        EntityFieldHelper.setFieldFromValue(child, childField, this);
-                        child.insert();
+                        if (child != null) {
+                            Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
+    //                        EntityFieldHelper.setFieldFromValue(this, childField, child);
+                            EntityFieldHelper.setFieldFromValue(child, childField, this);
+                            child.save();
+                        }
                     }
                 }
             } catch (IllegalAccessException e) {
@@ -165,7 +169,7 @@ public abstract class PersistentEntity {
 		}
 	}
 
-    private boolean beforeDelete() {
+    public boolean beforeDelete() {
         List<Field> fields = EntityFieldHelper.getRelationFields(getTableData().getDomainClass());
         for (Field field : fields) {
             try {
@@ -182,11 +186,13 @@ public abstract class PersistentEntity {
                 }
                 if (childs != null) {
                     for (PersistentEntity child : childs) {
-                        Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
-//                        EntityFieldHelper.setFieldFromValue(this, childField, child);
-                        EntityFieldHelper.setFieldFromValue(child, childField, this);
-                        if(child.delete() == false) {
-                            return false;
+                        if (child != null) {
+                            Field childField = Reflections.getDeclaredFieldRecursively(mappedBy, child.getClass(), PersistentEntity.class);
+                            //                        EntityFieldHelper.setFieldFromValue(this, childField, child);
+                            EntityFieldHelper.setFieldFromValue(child, childField, this);
+                            if (child.delete() == false) {
+                                return false;
+                            }
                         }
                     }
                 }
@@ -211,7 +217,7 @@ public abstract class PersistentEntity {
         }
 	}
 
-    private void afterDelete() {
+    public void afterDelete() {
         Class superClass = getTableData().getDomainClass().getSuperclass();
         if (superClass != PersistentEntity.class) {
             try {
@@ -244,6 +250,6 @@ public abstract class PersistentEntity {
 
     @Override
     public String toString() {
-        return getTableData().getTableName() + ": " + this.id;
+        return getTableData().getTableName() + ": " + this.getServerId();
     }
 }
