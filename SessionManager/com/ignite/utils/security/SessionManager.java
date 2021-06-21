@@ -1,19 +1,22 @@
-package com.ignite.networker.security;
+package com.ignite.utils.security;
 
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
-import com.ignite.networker.utils.ApplicationContextProvider;
+import com.ignite.utils.ApplicationContextProvider;
+import com.ignite.utils.Constants;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class SessionManager {
 
     SharedPreferences preferences;
     Editor editor;
     Context context;
+    Map<String, String> cookiesMap;
      
     // Shared preferences mode
     private final int PRIVATE_MODE = 0;
@@ -21,21 +24,21 @@ public class SessionManager {
      
     // Sharedpref file name
     private final String PREFERENCES_NAME = "session";
-     
+
     // All Shared Preferences Keys
     private static final String IS_LOGIN = "isLogin";
     private static final String HAS_ROLE = "hasRole";
+
+    // Shared Preferences Keys for Activity states
+    private static final String ACTIVITY_HOME_SELECTION = "activityHomeSelection";
      
     // User name (make variable public to access from outside)
-    public static final String KEY_IDENTIFIER = "idetifier";
+    public static final String KEY_IDENTIFIER = "identifier";
     public static final String KEY_USERNAME = "username";
     public static final String KEY_PASSWORD = "password";
 
-    // Parámetros de GCM (GoogleCloudMessaging)
-    public static final String GCM_REGISTRATION_ID = "gcm_registration_id";
-    public static final String GCM_APP_VERSION = "gcm_app_version";
-    public static final String GCM_EXPIRATION_TIME = "onServerExpirationTimeMs";
-    public static final String GCM_USER = "gcm_user";
+    // Cookie for other params
+    public static final String KEY_COOKIE = "cookie";
 
     public static SessionManager getSession() {
         return new SessionManager(ApplicationContextProvider.getContext());
@@ -50,7 +53,14 @@ public class SessionManager {
     }
 
     public static void removeSession(){
-        getSession().clear();
+        SessionManager session = getSession();
+        session.clear();
+        session.setLoggedIn(false);
+        session.setIdentifier((long)-1);
+        session.setRole(0);
+        session.setUsername(null);
+        session.setPassword(null);
+        session.setHomeActivitySelection(0);
     }
 
     // Constructor
@@ -59,6 +69,7 @@ public class SessionManager {
         try {
         	preferences = this.context.getSharedPreferences(PREFERENCES_NAME, PRIVATE_MODE);
      	    editor = preferences.edit();
+            cookiesMap = getCookies();
         } catch (NullPointerException e) {
         	e.printStackTrace();
 
@@ -81,6 +92,54 @@ public class SessionManager {
     public void clear() {
         editor.clear();
         editor.commit();
+    }
+
+    /* Hay que llamar a setCookies despues */
+    public void putCookie(String key, String value) {
+        cookiesMap.put(key, value);
+    }
+
+    public String getCookie(String key) {
+        return getCookie(key, null);
+    }
+
+    public String getCookie(String key, String defaultValue) {
+        String value = cookiesMap.get(key);
+        return value == null ? defaultValue : value;
+    }
+
+    public String removeCookie(String key) {
+        return cookiesMap.remove(key);
+    }
+
+    public void setCookies() {
+        if (cookiesMap != null) {
+            String cookies = "";
+            for (String cookie : cookiesMap.keySet()) {
+                String value = cookiesMap.get(cookie);
+                if (value != null && value.length() > 0) {
+                    cookies += cookie + "=" + cookiesMap.get(cookie) + ":";
+                }
+            }
+            Constants.Console.Log(cookies);
+            editor.putString(KEY_COOKIE, cookies);
+            editor.commit();
+        }
+    }
+
+    public Map<String, String> getCookies() {
+        if (cookiesMap == null) {
+            cookiesMap = new HashMap<>();
+            String cookies = preferences.getString(KEY_COOKIE, "");
+            Constants.Console.Log(cookies);
+            for (String cookie : cookies.split(":")) {
+                if (cookie.contains("=")) {
+                    String[] cookieEntry = cookie.split("=");
+                    cookiesMap.put(cookieEntry[0], cookieEntry[1]);
+                }
+            }
+        }
+        return cookiesMap;
     }
 
     /**
@@ -143,39 +202,12 @@ public class SessionManager {
         return preferences.getLong(KEY_IDENTIFIER, -1);
     }
 
-    public void setGCMRegistrationId(String regId) {
-        editor.putString(GCM_REGISTRATION_ID, regId);
+    public void setHomeActivitySelection(int selection) {
+        editor.putInt(ACTIVITY_HOME_SELECTION, selection);
         editor.commit();
     }
 
-    public String getGCMRegistrationId() {
-        return preferences.getString(GCM_REGISTRATION_ID, "");
-    }
-
-    public void setGCMAppVersion(int appVersion) {
-        editor.putInt(GCM_APP_VERSION, appVersion);
-        editor.commit();
-    }
-
-    public int getGCMAppVersion() {
-        return preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);
-    }
-
-    public void setGCMExpirationTime(Long expirationTime) {
-        editor.putLong(GCM_EXPIRATION_TIME, expirationTime);
-        editor.commit();
-    }
-
-    public Long getGCMExpirationTime() {
-        return preferences.getLong(GCM_EXPIRATION_TIME, -1);
-    }
-
-    public void setGCMUser(String user) {
-        editor.putString(GCM_USER, user);
-        editor.commit();
-    }
-
-    public String getGCMUser() {
-        return preferences.getString(GCM_USER, "");
+    public int getHomeActivitySelection() {
+        return preferences.getInt(ACTIVITY_HOME_SELECTION, 0/*HomeActivity.HOME_INDEX*/);
     }
 }
