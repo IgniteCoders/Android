@@ -1,3 +1,5 @@
+> After android 10.0 (API 29), dependencies used by this project becomes deprecated.
+
 # ConnectivityManager
 ConnectivityManager is an utility class with the purpuse of checking if internet is reachable.
 
@@ -14,8 +16,6 @@ You need to declare this permissions:
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 ```
-
-> After android 10.0 (API 29), dependencies used by this project becomes deprecated.
 
 ## Usage
 This class makes checks so easy as a simple code line:
