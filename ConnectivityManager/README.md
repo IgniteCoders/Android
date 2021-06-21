@@ -1,7 +1,7 @@
 > After android 10.0 (API 29), dependencies used by this project becomes deprecated.
 
 # ConnectivityManager
-ConnectivityManager is an utility class with the purpuse of checking if internet is reachable.
+ConnectivityManager is an utility class with the purpose of checking if internet is reachable.
 
 It's possible to check if there is an available connection and which type it's
 
